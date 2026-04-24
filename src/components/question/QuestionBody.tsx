@@ -20,42 +20,47 @@ export default function QuestionBody({
   return (
     <>
       {/* Question Body */}
-      <Markdown content={content} className="mb-8" />
+      <div className="prose prose-invert prose-lg max-w-none mb-12 p-6 bg-surface/10 rounded-lg border border-surface-container/20">
+        <Markdown content={content} className="text-white/90 leading-relaxed" />
+      </div>
 
       {/* AI Draft Block */}
       {hasAIDraft && (
-        <div className="border-l-[3px] border-brand-amber bg-[#0D0B08] p-5 mb-12">
+        <div className="border-l-[4px] border-lime-accent bg-gradient-to-r from-lime-accent/5 to-transparent p-6 mb-12 rounded-r-lg shadow-lg">
           <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-brand-amber text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-                <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-lime-accent/20 rounded-full">
+                <span className="material-symbols-outlined text-[18px] text-lime-accent" style={{ fontVariationSettings: "'FILL' 1" }}>
                   hexagon
                 </span>
-                AI Draft
-              </span>
-              <span className="text-[11px] text-white/40 font-mono">
+                <span className="text-sm font-bold text-lime-accent uppercase tracking-wider">AI Draft</span>
+              </div>
+              <span className="text-xs text-white/50 font-mono bg-surface-container/30 px-2 py-1 rounded">
                 Generated in {aiDraftGeneratedTime || '1.4s'}
               </span>
             </div>
             {aiDraftVerified && (
-              <div className="text-xs bg-[#22C55E]/10 text-[#22C55E] px-2 py-0.5 border border-[#22C55E]/20">
+              <div className="flex items-center gap-2 text-xs bg-green-500/10 text-green-400 px-3 py-1.5 border border-green-500/20 rounded-full">
+                <span className="material-symbols-outlined text-[14px]">verified</span>
                 Community Verified
               </div>
             )}
           </div>
-          <Markdown content={aiDraftContent} />
+          <div className="prose prose-invert prose-md max-w-none mb-6">
+            <Markdown content={aiDraftContent} className="text-white/85" />
+          </div>
           {/* AI Block Footer */}
-          <div className="mt-6 pt-4 border-t border-white/5 flex gap-4 text-[11px] font-bold uppercase tracking-tight">
-            <button className="flex items-center gap-1.5 text-white/40 hover:text-brand-lime transition-colors">
-              <span className="material-symbols-outlined text-[14px]">check_circle</span>
+          <div className="flex gap-4 text-xs font-semibold uppercase tracking-tight pt-4 border-t border-white/10">
+            <button className="flex items-center gap-2 text-white/40 hover:text-lime-accent transition-colors px-3 py-2 rounded-lg hover:bg-lime-accent/5">
+              <span className="material-symbols-outlined text-[16px]">check_circle</span>
               Looks correct (14)
             </button>
-            <button className="flex items-center gap-1.5 text-white/40 hover:text-error transition-colors">
-              <span className="material-symbols-outlined text-[14px]">warning</span>
+            <button className="flex items-center gap-2 text-white/40 hover:text-error transition-colors px-3 py-2 rounded-lg hover:bg-error/5">
+              <span className="material-symbols-outlined text-[16px]">warning</span>
               Flag as inaccurate (2)
             </button>
-            <button className="flex items-center gap-1.5 text-brand-lime ml-auto">
-              <span className="material-symbols-outlined text-[14px]">edit</span>
+            <button className="flex items-center gap-2 text-lime-accent ml-auto px-3 py-2 rounded-lg bg-lime-accent/5 hover:bg-lime-accent/10 transition-colors">
+              <span className="material-symbols-outlined text-[16px]">edit</span>
               Improve this answer
             </button>
           </div>

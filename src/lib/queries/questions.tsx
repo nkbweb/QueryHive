@@ -41,6 +41,8 @@ export async function getQuestions() {
     `)
     .order('created_at', { ascending: false })
 
+  console.log('getQuestions raw data:', data)
+
   if (error) {
     console.error('Error fetching questions:', error)
     return []
@@ -57,7 +59,7 @@ export async function getQuestions() {
 
     createdAt: formatTime(q.created_at),
 
-    username: q.profiles?.[0]?.username ?? 'Unknown',
+    username: (q.profiles as any)?.username ?? 'Unknown',
   }))
 }
 
@@ -77,6 +79,7 @@ export async function getQuestionById(questionId: string) {
       profiles (
         id,
         username,
+        full_name,
         avatar_url,
         reputation
       ),
@@ -95,6 +98,7 @@ export async function getQuestionById(questionId: string) {
         profiles (
           id,
           username,
+          full_name,
           avatar_url,
           reputation
         )
@@ -109,6 +113,7 @@ export async function getQuestionById(questionId: string) {
     `)
     .eq('id', questionId)
     .single()
+
 
   if (error) {
     console.error('Error fetching question details:', error)
@@ -132,10 +137,11 @@ export async function getQuestionById(questionId: string) {
     createdAt: formatTime(data.created_at),
     updatedAt: formatTime(data.updated_at),
     user: {
-      id: (data.profiles as any)?.[0]?.id,
-      username: (data.profiles as any)?.[0]?.username || 'Unknown',
-      avatarUrl: (data.profiles as any)?.[0]?.avatar_url,
-      reputation: (data.profiles as any)?.[0]?.reputation || 0
+      id: (data.profiles as any)?.id,
+      username: (data.profiles as any)?.username || 'Unknown',
+      fullName: (data.profiles as any)?.full_name,
+      avatarUrl: (data.profiles as any)?.avatar_url,
+      reputation: (data.profiles as any)?.reputation || 0
     },
     answers: (data.answers || []).map((answer) => {
       // Handle AI answers - check multiple indicators
@@ -177,6 +183,7 @@ export async function getQuestionById(questionId: string) {
         user: {
           id: profile?.id,
           username: profile?.username || 'Unknown',
+          fullName: profile?.full_name,
           avatarUrl: profile?.avatar_url,
           reputation: profile?.reputation || 0
         }

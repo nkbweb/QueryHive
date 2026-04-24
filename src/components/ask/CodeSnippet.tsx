@@ -19,7 +19,7 @@ export default function CodeSnippet() {
       </button>
       {isExpanded && (
         <div className="mt-4 bg-[#0e0e10] p-4 font-mono text-[13px] border-l border-white/5">
-          <div className="text-white/30 mb-2">// Paste your code here</div>
+          <div className="text-white/30 mb-2">{/* Paste your code here */}</div>
           <textarea
             value={code}
             onChange={(e) => setCode(e.target.value)}

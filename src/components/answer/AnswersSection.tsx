@@ -32,9 +32,9 @@ export default function AnswersSection({ answers }: AnswersSectionProps) {
   const humanAnswers = answers.filter(answer => !answer.isAI && answer.verificationCount <= 10)
 
   return (
-    <div className="mt-12">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-base font-medium text-white tracking-tight">
+    <div className="mt-8">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-medium text-white tracking-tight">
           {answers.length} {answers.length === 1 ? 'Answer' : 'Answers'}
         </h2>
         <div className="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-high/10 border border-surface-container-high/20">
@@ -44,10 +44,10 @@ export default function AnswersSection({ answers }: AnswersSectionProps) {
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-3">
         {/* Accepted Answer */}
         {acceptedAnswer && (
-          <div className="bg-lime-accent/8 border border-lime-accent/25 rounded-lg p-6 shadow-lg">
+          <div className="bg-primary-container/5 border border-primary-container/20 rounded p-3">
             <Answer answer={acceptedAnswer} isAccepted={true} />
           </div>
         )}
@@ -61,10 +61,10 @@ export default function AnswersSection({ answers }: AnswersSectionProps) {
         {humanAnswers.map((answer, index) => (
           <div 
             key={answer.id} 
-            className={`rounded-lg p-6 shadow-md ${
+            className={`rounded p-3 border border-white/[0.03] ${
               index % 2 === 0 
-                ? 'bg-surface-container/50 border border-surface-container/40' 
-                : 'bg-surface-container-high/30 border border-surface-container-high/40'
+                ? 'bg-surface-container/30' 
+                : 'bg-transparent'
             }`}
           >
             <Answer answer={answer} />

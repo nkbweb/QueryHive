@@ -58,7 +58,7 @@ export default function LeftSidebar() {
           transition-colors duration-150
           ${isActive
             ? 'text-[#E8FF47]'
-            : 'text-white/40 hover:text-white/85 hover:bg-white/5'
+            : 'text-white hover:bg-white/5'
           }
         `}
       >
@@ -96,8 +96,6 @@ export default function LeftSidebar() {
 
   return (
     <aside
-      onMouseEnter={() => !isManuallyOpened && setIsExpanded(true)}
-      onMouseLeave={() => !isManuallyOpened && setIsExpanded(false)}
       className={`
         h-full bg-[#131315] border-r border-[#1C1B1E]
         flex flex-col py-3
@@ -127,7 +125,7 @@ export default function LeftSidebar() {
           }}
           className="
             flex items-center w-full h-10 rounded-lg
-            text-white/40 hover:text-white/85 hover:bg-white/5
+            text-white hover:bg-white/5
             transition-colors duration-150 cursor-pointer outline-none border-none
           "
         >

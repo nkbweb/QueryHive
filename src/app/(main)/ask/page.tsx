@@ -175,10 +175,10 @@ export default function AskQuestionPage() {
   }
 
   return (
-    <main className="pt-[80px] pb-24 min-h-screen flex justify-center">
-      <div className="flex gap-16 w-full max-w-[1020px] px-6">
-        {/* Left/Main Column: 680px Focused writing */}
-        <div className="w-[680px]">
+    <main className="pt-6 pb-24 min-h-screen">
+      <div className="flex gap-16 w-full max-w-[1400px] px-8">
+        {/* Left/Main Column: Expanded width */}
+        <div className="flex-1">
           <Breadcrumb currentPage="Ask" />
           <h1 className="text-2xl font-bold tracking-[-0.02em] text-white mb-8">Ask a question</h1>
           
@@ -190,8 +190,8 @@ export default function AskQuestionPage() {
               <label className="block text-sm font-medium text-white mb-2">
                 Question Title *
               </label>
-              <div className="border border-lime-accent/30 bg-surface-container/50 rounded-lg overflow-hidden shadow-lg">
-                <div className="flex gap-4 px-4 py-3 border-b border-lime-accent/20 bg-surface-container-high/30">
+              <div className="bg-surface-container/50 rounded-lg overflow-hidden">
+                <div className="flex gap-4 px-4 py-3 border-b border-surface-container/20 bg-surface-container-high/30">
                   <span className="text-xs font-label text-lime-accent/80">Be specific and clear</span>
                 </div>
                 <input
@@ -213,8 +213,8 @@ export default function AskQuestionPage() {
               <label className="block text-sm font-medium text-white mb-2">
                 Details *
               </label>
-              <div className="border border-lime-accent/30 bg-surface-container/50 rounded-lg overflow-hidden shadow-lg">
-                <div className="flex gap-4 px-4 py-3 border-b border-lime-accent/20 bg-surface-container-high/30">
+              <div className="bg-surface-container/50 rounded-lg overflow-hidden">
+                <div className="flex gap-4 px-4 py-3 border-b border-surface-container/20 bg-surface-container-high/30">
                   <span className="text-xs font-label text-lime-accent/80">Markdown Supported</span>
                 </div>
                 <textarea
@@ -252,13 +252,7 @@ export default function AskQuestionPage() {
           )}
         </div>
         
-        {/* Right Column: 200px Sidebar */}
-        <aside className="w-[200px] flex-shrink-0">
-          <div className="space-y-10 sticky top-[80px]">
-            <Guidelines />
-            <RelatedQueries />
-          </div>
-        </aside>
+        {/* Right Column: Remove sidebar */}
       </div>
     </main>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Answer from './Answer'
 import AIAnswer from './AIAnswer'
 import { createClient } from '@/lib/supabase/client'
@@ -13,7 +13,7 @@ export default function AnswersSectionDynamic({ questionId }: AnswersSectionDyna
   const [answers, setAnswers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  const fetchAnswers = async () => {
+  const fetchAnswers = useCallback(async () => {
     try {
       const supabase = createClient()
       const { data, error } = await supabase
@@ -102,11 +102,11 @@ export default function AnswersSectionDynamic({ questionId }: AnswersSectionDyna
     } finally {
       setLoading(false)
     }
-  }
+  }, [questionId])
 
   useEffect(() => {
     fetchAnswers()
-  }, [questionId])
+  }, [fetchAnswers])
 
   // Set up polling to check for new answers
   useEffect(() => {
@@ -115,7 +115,7 @@ export default function AnswersSectionDynamic({ questionId }: AnswersSectionDyna
     }, 3000) // Check every 3 seconds
 
     return () => clearInterval(interval)
-  }, [questionId])
+  }, [fetchAnswers])
 
   if (loading) {
     return (

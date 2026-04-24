@@ -47,9 +47,6 @@ export async function getAnswersByQuestionId(questionId: string) {
     return []
   }
 
-  // Debug: Log the raw data structure
-  console.log('Raw answers data:', JSON.stringify(data, null, 2))
-
   return (data || []).map((answer) => {
     console.log(`Processing answer ${answer.id}:`, {
       user_id: answer.user_id,

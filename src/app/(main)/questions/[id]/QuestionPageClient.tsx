@@ -49,7 +49,7 @@ export default function QuestionPageClient({ questionId, initialQuestion }: Ques
   }
 
   return (
-    <div className="pt-[48px] max-w-[1000px] mx-auto flex min-h-[calc(100vh-48px)]">
+    <div className="pt-[48px] max-w-[1400px] flex min-h-[calc(100vh-48px)]">
       {/* Vote Column (Left Gutter 60px) */}
       <VoteColumn
         questionId={question.id}
@@ -57,7 +57,7 @@ export default function QuestionPageClient({ questionId, initialQuestion }: Ques
       />
 
       {/* Main Content */}
-      <main className="w-[1000px] pt-8 pb-20 px-4">
+      <main className="flex-1 pb-20 px-8">
         <QuestionHeader
           title={question.title}
           user={question.user}
@@ -85,12 +85,6 @@ export default function QuestionPageClient({ questionId, initialQuestion }: Ques
         {/* Answer Form */}
         <AnswerFormWrapper questionId={questionId} />
       </main>
-
-      {/* Sidebar */}
-      <QuestionSidebar 
-        answersCount={0} // Will be updated dynamically by AnswersSectionDynamic
-        upvotes={question.upvotes || 0}
-      />
     </div>
   )
 }

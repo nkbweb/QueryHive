@@ -127,7 +127,7 @@ export default function BookmarksPage() {
         <div className="flex-1">
           <div className="mb-8">
             <h1 className="text-2xl font-bold tracking-[-0.02em] text-white mb-2">Bookmarks</h1>
-            <p className="text-sm text-white/60">Questions you've saved for later</p>
+            <p className="text-sm text-white/60">Questions you&apos;ve saved for later</p>
           </div>
 
           {bookmarks.length === 0 ? (

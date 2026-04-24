@@ -19,25 +19,21 @@ export default function VoteColumn({
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [isBookmarking, setIsBookmarking] = useState(false)
 
-  // Fetch user's current vote and bookmark status on component mount
   useEffect(() => {
     const fetchUserData = async () => {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      
       if (!user) return
 
-      // Get user's vote from database
       const userVote = await getUserVote(user.id, 'question', questionId)
       setCurrentUserVote(userVote)
 
-      // Check if question is bookmarked
       const { data, error } = await supabase
         .from('bookmarks')
         .select('id')
         .eq('user_id', user.id)
         .eq('question_id', questionId)
-        .single()
+        .maybeSingle()
 
       setIsBookmarked(!error && !!data)
     }
@@ -47,33 +43,25 @@ export default function VoteColumn({
 
   const handleVote = async (voteValue: 1 | -1 | 0) => {
     if (isVoting) return
-
     setIsVoting(true)
     const supabase = createClient()
 
     try {
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Update vote using database function
       const success = await updateVote(user.id, 'question', questionId, voteValue)
       
       if (success) {
-        // Update local state
         let newUpvotes = upvotes
-        
         if (currentUserVote === voteValue) {
-          // Remove vote if clicking same
           newUpvotes = upvotes - voteValue
           setCurrentUserVote(0)
         } else {
-          // Change or add vote
           const voteDiff = voteValue - currentUserVote
           newUpvotes = upvotes + voteDiff
           setCurrentUserVote(voteValue)
         }
-        
         setUpvotes(newUpvotes)
       }
     } catch (error) {
@@ -85,38 +73,25 @@ export default function VoteColumn({
 
   const handleBookmark = async () => {
     if (isBookmarking) return
-
     setIsBookmarking(true)
     const supabase = createClient()
 
     try {
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
       if (isBookmarked) {
-        // Remove bookmark
         const { error } = await supabase
           .from('bookmarks')
           .delete()
           .eq('user_id', user.id)
           .eq('question_id', questionId)
-
-        if (!error) {
-          setIsBookmarked(false)
-        }
+        if (!error) setIsBookmarked(false)
       } else {
-        // Add bookmark
         const { error } = await supabase
           .from('bookmarks')
-          .insert({
-            user_id: user.id,
-            question_id: questionId
-          })
-
-        if (!error) {
-          setIsBookmarked(true)
-        }
+          .insert({ user_id: user.id, question_id: questionId })
+        if (!error) setIsBookmarked(true)
       }
     } catch (error) {
       console.error('Bookmark error:', error)
@@ -126,57 +101,62 @@ export default function VoteColumn({
   }
 
   return (
-    <aside className="w-[60px] flex flex-col items-center pt-8 sticky top-[48px] h-fit">
-      {/* Upvote Button */}
-      <button 
+    <aside className="w-[52px] flex flex-col items-center sticky top-[48px] h-fit gap-0.5">
+
+      {/* Upvote */}
+      <button
         onClick={() => handleVote(1)}
         disabled={isVoting}
-        className={`transition-colors ${
-          currentUserVote === 1 
-            ? 'text-primary-container' 
-            : 'text-white/30 hover:text-primary-container'
-        }`}
+        className={`group p-1 transition-all duration-150 ${
+          currentUserVote === 1 ? 'text-lime-accent' : 'text-white/25 hover:text-white/60'
+        } ${isVoting ? 'opacity-40 cursor-wait' : ''}`}
+        title="Upvote"
       >
-        <span className="material-symbols-outlined text-[32px]">
+        <span className="material-symbols-outlined text-[34px] transition-transform group-hover:scale-110 block">
           arrow_drop_up
         </span>
       </button>
 
-      {/* Vote Count */}
-      <span className="font-mono font-bold text-xl leading-none my-1">
+      {/* Count */}
+      <span className={`font-mono font-semibold text-base leading-none tabular-nums select-none transition-colors duration-150 ${
+        currentUserVote === 1 ? 'text-lime-accent' :
+        currentUserVote === -1 ? 'text-error' :
+        'text-white/50'
+      }`}>
         {upvotes}
       </span>
 
-      {/* Downvote Button */}
-      <button 
+      {/* Downvote */}
+      <button
         onClick={() => handleVote(-1)}
         disabled={isVoting}
-        className={`transition-colors ${
-          currentUserVote === -1 
-            ? 'text-error' 
-            : 'text-white/30 hover:text-error'
-        }`}
+        className={`group p-1 transition-all duration-150 ${
+          currentUserVote === -1 ? 'text-error' : 'text-white/25 hover:text-white/60'
+        } ${isVoting ? 'opacity-40 cursor-wait' : ''}`}
+        title="Downvote"
       >
-        <span className="material-symbols-outlined text-[32px]">
+        <span className="material-symbols-outlined text-[34px] transition-transform group-hover:scale-110 block">
           arrow_drop_down
         </span>
       </button>
 
-      {/* Bookmark Button */}
-      <button 
+      {/* Divider */}
+      <div className="w-4 h-px bg-white/[0.08] my-3" />
+
+      {/* Bookmark */}
+      <button
         onClick={handleBookmark}
         disabled={isBookmarking}
-        className={`mt-4 transition-colors ${
-          isBookmarked 
-            ? 'text-primary-container' 
-            : 'text-white/30 hover:text-primary-container'
-        } ${isBookmarking ? 'opacity-50 cursor-wait' : ''}`}
-        title={isBookmarked ? 'Remove bookmark' : 'Bookmark question'}
+        className={`group p-1 transition-all duration-150 ${
+          isBookmarked ? 'text-white/70' : 'text-white/25 hover:text-white/60'
+        } ${isBookmarking ? 'opacity-40 cursor-wait' : ''}`}
+        title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
       >
-        <span className="material-symbols-outlined text-[20px]">
+        <span className="material-symbols-outlined text-[20px] transition-transform group-hover:scale-110 block">
           {isBookmarked ? 'bookmark' : 'bookmark_border'}
         </span>
       </button>
+
     </aside>
   )
 }

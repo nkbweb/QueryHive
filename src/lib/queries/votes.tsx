@@ -2,20 +2,20 @@ import { createClient } from '@/lib/supabase/client'
 
 export async function getUserVote(userId: string, targetType: 'question' | 'answer', targetId: string) {
   const supabase = createClient()
-  
+
   const { data, error } = await supabase
     .from('votes')
     .select('value')
     .eq('user_id', userId)
     .eq('target_type', targetType)
     .eq('target_id', targetId)
-    .single()
-    
+    .maybeSingle()
+
   if (error) {
     console.error('Error fetching user vote:', error)
     return 0
   }
-  
+
   return data?.value || 0
 }
 

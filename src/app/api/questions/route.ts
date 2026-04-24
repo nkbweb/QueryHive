@@ -124,36 +124,95 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const tagId = searchParams.get('tag')
 
-    let query = supabase
-      .from('questions')
-      .select(`
-        id,
-        title,
-        content,
-        views,
-        upvotes,
-        created_at,
-        profiles (
-          username
-        ),
-        answers (
-          id
-        ),
-        question_tags (
-          tags (
-            id,
-            name,
-            color
-          )
-        )
-      `)
-      .order('created_at', { ascending: false })
+    let data, error
 
     if (tagId) {
-      query = query.eq('question_tags.tag_id', tagId)
-    }
+      // Filter by tag using a proper join
+      const result = await supabase
+        .from('question_tags')
+        .select(`
+          question_id,
+          questions!inner (
+            id,
+            title,
+            content,
+            views,
+            upvotes,
+            created_at,
+            profiles (
+              username
+            ),
+            answers (
+              id
+            )
+          )
+        `)
+        .eq('tag_id', tagId)
+      
+      if (result.error) {
+        console.error('Error fetching questions by tag:', result.error)
+        return NextResponse.json(
+          { error: 'Failed to fetch questions' },
+          { status: 500 }
+        )
+      }
 
-    const { data, error } = await query
+      // Fetch tags for each question
+      const questionIds = result.data?.map((qt: any) => qt.question_id) || []
+      const { data: tagsData } = await supabase
+        .from('question_tags')
+        .select('question_id, tags(id, name, color)')
+        .in('question_id', questionIds)
+
+      const tagsMap = new Map()
+      tagsData?.forEach((qt: any) => {
+        if (!tagsMap.has(qt.question_id)) {
+          tagsMap.set(qt.question_id, [])
+        }
+        if (qt.tags) {
+          tagsMap.get(qt.question_id).push({
+            id: qt.tags.id,
+            name: qt.tags.name,
+            color: qt.tags.color || '#6B7280'
+          })
+        }
+      })
+
+      data = result.data?.map((qt: any) => ({
+        ...qt.questions,
+        question_tags: [{ tags: tagsMap.get(qt.question_id) || [] }]
+      }))
+      error = null
+    } else {
+      // Fetch all questions
+      const result = await supabase
+        .from('questions')
+        .select(`
+          id,
+          title,
+          content,
+          views,
+          upvotes,
+          created_at,
+          profiles (
+            username
+          ),
+          answers (
+            id
+          ),
+          question_tags (
+            tags (
+              id,
+              name,
+              color
+            )
+          )
+        `)
+        .order('created_at', { ascending: false })
+
+      data = result.data
+      error = result.error
+    }
 
     if (error) {
       console.error('Error fetching questions:', error)
