@@ -197,7 +197,10 @@ export default function AskQuestionPage() {
                 <input
                   type="text"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, title: e.target.value })
+                    if (errors.title) setErrors({ ...errors, title: '' })
+                  }}
                   className="w-full bg-transparent border-none focus:ring-0 focus:outline-none p-6 text-[15px] text-white/95 placeholder:text-white/40 resize-none"
                   placeholder="What's your programming question? Be specific."
                   maxLength={300}
@@ -219,7 +222,10 @@ export default function AskQuestionPage() {
                 </div>
                 <textarea
                   value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, content: e.target.value })
+                    if (errors.content) setErrors({ ...errors, content: '' })
+                  }}
                   className="w-full bg-transparent border-none focus:ring-0 focus:outline-none min-h-[200px] p-6 text-[15px] text-white/95 placeholder:text-white/40 resize-none"
                   placeholder="Include all the information someone would need to answer your question\n\nYou can use markdown for formatting:\n\n**bold** and *italic* text\n`inline code`\n```code blocks```"
                   rows={8}
