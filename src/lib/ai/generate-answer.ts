@@ -33,19 +33,14 @@ export class AnswerGenerationService {
         this.buildContext(params)
       )
 
-      // Get current user (AI system user)
-      const { data: { user } } = await this.supabase.auth.getUser()
-      if (!user) {
-        throw new Error('User not authenticated')
-      }
-
+      // For AI answers, use null user_id (AI system)
       // Save answer to database
       const { data: answerData, error: insertError } = await this.supabase
         .from('answers')
         .insert({
           content: aiResponse.answer,
           question_id: params.questionId,
-          user_id: user.id,
+          user_id: null, // AI answers have no user
           upvotes: 0,
           downvotes: 0,
           verification_count: 0,
