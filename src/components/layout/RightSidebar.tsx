@@ -2,7 +2,7 @@
 
 export default function RightSidebar() {
   return (
-    <aside className="w-[220px] h-full bg-[#131315] border-l border-[#1C1B1E] p-4 flex flex-col gap-8 overflow-y-auto no-scrollbar">
+    <aside className="hidden lg:block w-[220px] h-full bg-[#131315] border-l border-[#1C1B1E] p-4 flex flex-col gap-8 overflow-y-auto no-scrollbar">
       {/* Needs Human Answers */}
       <section>
         <h3 className="text-[11px] font-bold text-white/30 uppercase tracking-widest mb-4">Needs Human</h3>

@@ -13,15 +13,15 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     <div className="text-on-surface select-none h-screen flex flex-col">
       
       <TopNavBar />
-
+      
       <div className="flex flex-1 pt-[48px] overflow-hidden">
-        <LeftSidebar />
-
+        <div className="block">
+          <LeftSidebar />
+        </div>
         <main className="flex-1 min-w-0 overflow-y-auto">
           {children}
         </main>
       </div>
-
     </div>
   )
 }
