@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       tagNames = tagData?.map((t: any) => t.name) || []
     }
 
-    // Trigger AI answer generation (async, don't wait for it)
+    // Trigger AI answer generation via background job
     let hasQuota = false
     try {
       const aiJob = AIAnswerJob.getInstance()
@@ -83,10 +83,19 @@ export async function POST(request: NextRequest) {
       hasQuota = await aiJob.checkUserAIQuota(userId)
       
       if (hasQuota) {
-        // Trigger AI generation in background (don't await to avoid slowing down response)
-        aiJob.triggerAIAnswerForQuestion(question.id).catch(error => {
-          console.error('Background AI answer generation failed:', error)
+        // Trigger background job for AI generation
+        const baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL 
+          ? `https://${process.env.VERCEL_URL}` 
+          : 'http://localhost:3000'
+        
+        fetch(`${baseUrl}/api/ai/process-answer-job`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ questionId: question.id })
+        }).catch(error => {
+          console.error('Background job trigger failed:', error)
         })
+        
         console.log(`AI answer generation triggered for question: ${question.id}`)
       } else {
         console.log(`User ${userId} has exceeded AI quota, skipping AI generation`)

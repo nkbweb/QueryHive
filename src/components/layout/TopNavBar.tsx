@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getProfileImagePlaceholder } from '@/lib/storage/profile-images'
 import { useAuth } from '@/lib/auth'
+import { useNotifications } from '@/hooks/useNotifications'
 import { AuthUser } from '@/types'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -11,8 +12,10 @@ import Link from 'next/link'
 export default function TopNavBar() {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string>('')
+  const [username, setUsername] = useState<string>('')
   const [showUserMenu, setShowUserMenu] = useState(false)
   const { logout } = useAuth()
+  const { unreadCount } = useNotifications()
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -29,8 +32,9 @@ export default function TopNavBar() {
           .select('avatar_url, username')
           .eq('id', user.id)
           .single()
-        
+
         setAvatarUrl(profile?.avatar_url || getProfileImagePlaceholder())
+        setUsername(profile?.username || '')
       }
     }
 
@@ -84,10 +88,14 @@ export default function TopNavBar() {
         </div>
       </div>
       <div className="flex items-center gap-4">
-        <div className="relative cursor-pointer group flex items-center justify-center">
+        <Link href="/notifications" className="relative cursor-pointer group flex items-center justify-center">
           <span className="material-symbols-outlined text-white/60 text-[40px] group-hover:text-white/80 transition-colors">notifications</span>
-          <span className="absolute top-1 right-1 w-2 h-2 bg-lime-accent rounded-full animate-pulse"></span>
-        </div>
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 w-5 h-5 bg-lime-accent rounded-full flex items-center justify-center text-[10px] font-bold text-black">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </Link>
         {user ? (
           <div className="relative flex items-center" ref={userMenuRef}>
             <button
@@ -115,6 +123,16 @@ export default function TopNavBar() {
                   </div>
                 </div>
                 <div className="py-2">
+                  {username && (
+                    <Link
+                      href={`/profile/${username}`}
+                      onClick={() => setShowUserMenu(false)}
+                      className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-surface-container-high transition-colors flex items-center gap-3"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">person</span>
+                      <span>My Profile</span>
+                    </Link>
+                  )}
                   <button
                     onClick={() => {
                       logout()

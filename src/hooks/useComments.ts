@@ -1,42 +1,63 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-export function useCommentVote(commentId: string) {
+export function useCommentVote(commentId: string, initialUpvotes: number = 0, initialDownvotes: number = 0) {
   const [isVoting, setIsVoting] = useState(false)
   const [currentUserVote, setCurrentUserVote] = useState(0)
-  const [upvotes, setUpvotes] = useState(0)
-  const [downvotes, setDownvotes] = useState(0)
+  const [upvotes, setUpvotes] = useState(initialUpvotes)
+  const [downvotes, setDownvotes] = useState(initialDownvotes)
+
+  useEffect(() => {
+    const fetchUserVote = async (retryCount = 0) => {
+      try {
+        const response = await fetch(`/api/comments/${commentId}/vote`)
+        console.log('Vote fetch response:', response.status, response.ok)
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Vote data received:', data)
+          setCurrentUserVote(data.currentVote || 0)
+        } else {
+          console.error('Vote fetch failed:', response.status)
+        }
+      } catch (error) {
+        console.error('Error fetching user vote:', error)
+        // Retry on network errors
+        if (retryCount < 2) {
+          setTimeout(() => fetchUserVote(retryCount + 1), 100)
+        }
+      }
+    }
+    fetchUserVote()
+  }, [commentId])
 
   const handleVote = async (voteValue: 1 | -1 | 0) => {
     if (isVoting) return
     setIsVoting(true)
-    
+
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return false
-      if (currentUserVote !== 0 && voteValue !== 0) return false
-      
+
+      console.log('Submitting vote:', { commentId, voteValue, currentUserVote })
+
       const response = await fetch(`/api/comments/${commentId}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value: voteValue })
       })
 
+      console.log('Vote response status:', response.status, response.ok)
+
       if (response.ok) {
-        let newUpvotes = upvotes
-        let newDownvotes = downvotes
-        if (currentUserVote === voteValue) {
-          if (voteValue === 1) newUpvotes = upvotes - 1
-          else if (voteValue === -1) newDownvotes = downvotes - 1
-          setCurrentUserVote(0)
-        } else {
-          if (voteValue === 1) newUpvotes = upvotes + 1
-          else if (voteValue === -1) newDownvotes = downvotes + 1
-          setCurrentUserVote(voteValue)
-        }
-        setUpvotes(newUpvotes)
-        setDownvotes(newDownvotes)
+        const data = await response.json()
+        console.log('Vote response data:', data)
+
+        // Use the values from API response to ensure they match database
+        setCurrentUserVote(data.currentVote || 0)
+        setUpvotes(data.upvotes || 0)
+        setDownvotes(data.downvotes || 0)
+
         return true
       }
       return false
@@ -48,19 +69,12 @@ export function useCommentVote(commentId: string) {
     }
   }
 
-  const initialize = (vote: number, up: number, down: number) => {
-    setCurrentUserVote(vote)
-    setUpvotes(up)
-    setDownvotes(down)
-  }
-
   return {
     isVoting,
     currentUserVote,
     upvotes,
     downvotes,
-    handleVote,
-    initialize
+    handleVote
   }
 }
 

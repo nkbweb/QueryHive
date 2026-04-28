@@ -20,22 +20,33 @@ export default function VoteColumn({
   const [isBookmarking, setIsBookmarking] = useState(false)
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+    const fetchUserData = async (retryCount = 0) => {
+      try {
+        const supabase = createClient()
+        const { data: { user }, error } = await supabase.auth.getUser()
 
-      const userVote = await getUserVote(user.id, 'question', questionId)
-      setCurrentUserVote(userVote)
+        // Handle auth lock errors by retrying
+        if (error && error.message?.includes('Lock') && retryCount < 2) {
+          setTimeout(() => fetchUserData(retryCount + 1), 100)
+          return
+        }
 
-      const { data, error } = await supabase
-        .from('bookmarks')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('question_id', questionId)
-        .maybeSingle()
+        if (!user) return
 
-      setIsBookmarked(!error && !!data)
+        const userVote = await getUserVote(user.id, 'question', questionId)
+        setCurrentUserVote(userVote)
+
+        const { data, error: bookmarkError } = await supabase
+          .from('bookmarks')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('question_id', questionId)
+          .maybeSingle()
+
+        setIsBookmarked(!bookmarkError && !!data)
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+      }
     }
 
     fetchUserData()

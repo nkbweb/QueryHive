@@ -39,15 +39,11 @@ export default function Comment({
   currentUserId,
   answerId
 }: CommentProps) {
-  const { isVoting, currentUserVote, upvotes, downvotes, handleVote, initialize } = useCommentVote(comment.id)
+  const { isVoting, currentUserVote, upvotes, downvotes, handleVote } = useCommentVote(comment.id, comment.upvotes, comment.downvotes)
   const { isSubmitting: isReplySubmitting, handleSubmit: handleReplySubmit } = useCommentReply(answerId, comment.id)
   const [replyContent, setReplyContent] = useState('')
 
   const childComments = allComments.filter(c => c.parentId === comment.id)
-
-  useEffect(() => {
-    initialize(0, comment.upvotes, comment.downvotes)
-  }, [comment.id, comment.upvotes, comment.downvotes, initialize])
 
   const onReplySubmit = async () => {
     const newComment = await handleReplySubmit(replyContent)
