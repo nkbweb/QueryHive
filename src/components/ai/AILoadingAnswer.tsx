@@ -12,20 +12,36 @@ export default function AILoadingAnswer({ questionId, onAnswerReady }: AILoading
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
+    let hasTriggeredFallback = false
+
     const checkForAIAnswer = async () => {
       try {
         const supabase = createClient()
-        const { data: answers, error } = await supabase
+        const { data: answer, error } = await supabase
           .from('answers')
           .select('id, is_ai')
           .eq('question_id', questionId)
           .eq('is_ai', true)
-          .single()
+          .maybeSingle()
 
-        if (answers && !error) {
+        if (answer && !error) {
           // AI answer found!
           setIsChecking(false)
           onAnswerReady()
+          return
+        }
+
+        // No AI answer yet — trigger generation as a fallback
+        // (in case the server-side fire-and-forget didn't complete)
+        if (!hasTriggeredFallback) {
+          hasTriggeredFallback = true
+          fetch('/api/ai/trigger-answer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ questionId })
+          }).catch(err => {
+            console.error('Fallback AI trigger failed:', err)
+          })
         }
       } catch (error) {
         console.error('Error checking for AI answer:', error)

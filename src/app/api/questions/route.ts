@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
         .from('tags')
         .select('name')
         .in('id', tags)
-      
+
       tagNames = tagData?.map((t: any) => t.name) || []
     }
 
@@ -78,22 +78,15 @@ export async function POST(request: NextRequest) {
     let hasQuota = false
     try {
       const aiJob = AIAnswerJob.getInstance()
-      
+
       // Check user AI quota first
       hasQuota = await aiJob.checkUserAIQuota(userId)
-      
+
       if (hasQuota) {
-        // Trigger background job for AI generation
-        const baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL 
-          ? `https://${process.env.VERCEL_URL}` 
-          : 'http://localhost:3000'
-        
-        fetch(`${baseUrl}/api/ai/process-answer-job`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ questionId: question.id })
-        }).catch(error => {
-          console.error('Background job trigger failed:', error)
+        // Trigger AI answer generation directly (no self-fetch needed)
+        // Fire-and-forget: don't await so the response returns immediately
+        aiJob.triggerAIAnswerForQuestion(question.id).catch(error => {
+          console.error('Background AI answer generation failed:', error)
         })
         
         console.log(`AI answer generation triggered for question: ${question.id}`)
@@ -106,8 +99,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         question: {
           id: question.id,
           title: question.title,
@@ -157,7 +150,7 @@ export async function GET(request: NextRequest) {
           )
         `)
         .eq('tag_id', tagId)
-      
+
       if (result.error) {
         console.error('Error fetching questions by tag:', result.error)
         return NextResponse.json(

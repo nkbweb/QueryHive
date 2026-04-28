@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import Image from 'next/image'
 import QuestionsList from './QuestionsList'
 import AnswersList from './AnswersList'
 import CommentsList from './CommentsList'
@@ -97,10 +98,11 @@ export default function ProfileView({ profile, isOwnProfile, currentUserId, ques
             <div className="relative">
               <div className="w-24 h-24 rounded-full bg-[#131315] border border-white/[0.05] flex items-center justify-center overflow-hidden">
                 {profile.avatar_url ? (
-                  <img
+                  <Image
                     src={profile.avatar_url}
                     alt={profile.username}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 ) : (
                   <span className="text-3xl font-bold text-white/40">
