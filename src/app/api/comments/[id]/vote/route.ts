@@ -33,10 +33,19 @@ export async function POST(
     // Get updated vote status
     const currentVote = await getUserCommentVote(params.id, user.id)
 
-    return NextResponse.json({ 
-      success: true, 
+    // Get updated comment vote counts
+    const { data: comment } = await supabase
+      .from('comments')
+      .select('upvotes, downvotes')
+      .eq('id', params.id)
+      .single()
+
+    return NextResponse.json({
+      success: true,
       data: result,
-      currentVote 
+      currentVote,
+      upvotes: comment?.upvotes || 0,
+      downvotes: comment?.downvotes || 0
     })
   } catch (error) {
     console.error('Error in POST /api/comments/[id]/vote:', error)
@@ -65,7 +74,7 @@ export async function GET(
 
     const vote = await getUserCommentVote(params.id, user.id)
 
-    return NextResponse.json({ success: true, data: { vote } })
+    return NextResponse.json({ success: true, currentVote: vote })
   } catch (error) {
     console.error('Error in GET /api/comments/[id]/vote:', error)
     return NextResponse.json(

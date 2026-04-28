@@ -48,7 +48,7 @@ export default function AnswersSectionDynamic({ questionId }: AnswersSectionDyna
       const formattedAnswers = (data || []).map((answer) => {
         // Handle AI answers
         const isAIAnswer = answer.is_ai === true
-        
+
         if (isAIAnswer) {
           return {
             id: answer.id,
@@ -69,7 +69,7 @@ export default function AnswersSectionDynamic({ questionId }: AnswersSectionDyna
             }
           };
         }
-        
+
         const profile = answer.profiles as any;
         return {
           id: answer.id,
@@ -106,16 +106,30 @@ export default function AnswersSectionDynamic({ questionId }: AnswersSectionDyna
 
   useEffect(() => {
     fetchAnswers()
-  }, [fetchAnswers])
 
-  // Set up polling to check for new answers
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchAnswers()
-    }, 3000) // Check every 3 seconds
+    // Set up Realtime subscription
+    const supabase = createClient()
+    const channel = supabase
+      .channel('answers_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'answers',
+          filter: `question_id=eq.${questionId}`
+        },
+        (payload) => {
+          console.log('Answer change received:', payload)
+          fetchAnswers()
+        }
+      )
+      .subscribe()
 
-    return () => clearInterval(interval)
-  }, [fetchAnswers])
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [questionId, fetchAnswers])
 
   if (loading) {
     return (

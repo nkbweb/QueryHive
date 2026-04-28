@@ -10,8 +10,6 @@ interface AILoadingAnswerProps {
 
 export default function AILoadingAnswer({ questionId, onAnswerReady }: AILoadingAnswerProps) {
   const [isChecking, setIsChecking] = useState(true)
-  const [attempts, setAttempts] = useState(0)
-  const maxAttempts = 30 // Check for up to 30 seconds
 
   useEffect(() => {
     const checkForAIAnswer = async () => {
@@ -28,23 +26,41 @@ export default function AILoadingAnswer({ questionId, onAnswerReady }: AILoading
           // AI answer found!
           setIsChecking(false)
           onAnswerReady()
-        } else {
-          // No AI answer yet, continue checking
-          setAttempts(prev => prev + 1)
         }
       } catch (error) {
         console.error('Error checking for AI answer:', error)
       }
     }
 
-    if (isChecking && attempts < maxAttempts) {
-      const timer = setTimeout(checkForAIAnswer, 1000) // Check every 1 second
-      return () => clearTimeout(timer)
-    } else if (attempts >= maxAttempts) {
-      // Stop checking after max attempts
-      setIsChecking(false)
+    // Initial check
+    checkForAIAnswer()
+
+    // Set up Realtime subscription for new AI answers
+    const supabase = createClient()
+    const channel = supabase
+      .channel('ai_answer_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'answers',
+          filter: `question_id=eq.${questionId}`
+        },
+        (payload) => {
+          console.log('New answer received:', payload)
+          if (payload.new.is_ai) {
+            setIsChecking(false)
+            onAnswerReady()
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
     }
-  }, [questionId, isChecking, attempts, onAnswerReady])
+  }, [questionId, onAnswerReady])
 
   if (!isChecking) {
     return null // Don't show anything if not checking
@@ -72,11 +88,11 @@ export default function AILoadingAnswer({ questionId, onAnswerReady }: AILoading
                 <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
               </div>
             </div>
-            
+
             <p className="text-sm text-gray-300 mb-3">
               Our AI is analyzing your question and preparing a helpful response...
             </p>
-            
+
             <div className="flex items-center gap-4 text-xs text-gray-400">
               <div className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-[14px]">psychology</span>
@@ -89,15 +105,6 @@ export default function AILoadingAnswer({ questionId, onAnswerReady }: AILoading
               <div className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-[14px]">edit</span>
                 <span>Formatting response</span>
-              </div>
-            </div>
-            
-            <div className="mt-3">
-              <div className="w-full bg-gray-700 rounded-full h-1">
-                <div 
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-1 rounded-full transition-all duration-1000"
-                  style={{ width: `${Math.min((attempts / maxAttempts) * 100, 95)}%` }}
-                ></div>
               </div>
             </div>
           </div>
