@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getUserVote, updateVote } from '@/lib/queries/votes'
+import { ChevronUp, ChevronDown, Bookmark } from 'lucide-react'
 
 interface VoteColumnProps {
   questionId: string
@@ -123,9 +124,7 @@ export default function VoteColumn({
         } ${isVoting ? 'opacity-40 cursor-wait' : ''}`}
         title="Upvote"
       >
-        <span className="material-symbols-outlined text-[34px] transition-transform group-hover:scale-110 block">
-          arrow_drop_up
-        </span>
+        <ChevronUp className="w-10 h-10 transition-transform group-hover:scale-110 block" />
       </button>
 
       {/* Count */}
@@ -146,9 +145,7 @@ export default function VoteColumn({
         } ${isVoting ? 'opacity-40 cursor-wait' : ''}`}
         title="Downvote"
       >
-        <span className="material-symbols-outlined text-[34px] transition-transform group-hover:scale-110 block">
-          arrow_drop_down
-        </span>
+        <ChevronDown className="w-10 h-10 transition-transform group-hover:scale-110 block" />
       </button>
 
       {/* Divider */}
@@ -163,9 +160,7 @@ export default function VoteColumn({
         } ${isBookmarking ? 'opacity-40 cursor-wait' : ''}`}
         title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
       >
-        <span className="material-symbols-outlined text-[20px] transition-transform group-hover:scale-110 block">
-          {isBookmarked ? 'bookmark' : 'bookmark_border'}
-        </span>
+        <Bookmark className={`w-6 h-6 transition-transform group-hover:scale-110 block ${isBookmarked ? 'fill-current' : ''}`} />
       </button>
 
     </aside>

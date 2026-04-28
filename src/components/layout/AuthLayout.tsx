@@ -3,7 +3,6 @@
 import { ReactNode } from 'react'
 import TopNavBar from './TopNavBar'
 import LeftSidebar from './LeftSidebar'
-import StatusBar from './StatusBar'
 
 interface AuthLayoutProps {
   children: ReactNode
@@ -23,7 +22,6 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         </main>
       </div>
 
-      <StatusBar />
     </div>
   )
 }

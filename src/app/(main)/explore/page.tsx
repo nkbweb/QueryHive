@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import ExploreSidebar from '@/components/explore/ExploreSidebar'
+import { useNavigationWithLoading } from '@/hooks/useNavigationWithLoading'
 
 type Question = {
   id: string
@@ -43,6 +44,7 @@ type Stats = {
 }
 
 export default function ExplorePage() {
+  const { navigate } = useNavigationWithLoading()
   const [activeTab, setActiveTab] = useState<'trending' | 'recent' | 'unanswered' | 'ai-answered' | 'most-viewed'>('trending')
   const [questions, setQuestions] = useState<Question[]>([])
   const [tags, setTags] = useState<Tag[]>([])
@@ -51,6 +53,11 @@ export default function ExplorePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [activeTagId, setActiveTagId] = useState<string | null>(null)
+
+  const handleQuestionClick = (e: React.MouseEvent, questionId: string) => {
+    e.preventDefault()
+    navigate(`/questions/${questionId}`)
+  }
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -234,6 +241,7 @@ export default function ExplorePage() {
                 <Link
                   key={q.id}
                   href={`/questions/${q.id}`}
+                  onClick={(e) => handleQuestionClick(e, q.id)}
                   className="px-4 py-3 flex items-start gap-4 border-b border-white/[0.03] group block"
                 >
                   {/* Upvotes */}

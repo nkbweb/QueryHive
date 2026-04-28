@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useNavigationWithLoading } from '@/hooks/useNavigationWithLoading'
 
 type Question = {
   id: string
@@ -13,6 +14,13 @@ type Question = {
 }
 
 export default function QuestionFeed({ questions = [] }: { questions: Question[] }) {
+  const { navigate } = useNavigationWithLoading()
+
+  const handleQuestionClick = (e: React.MouseEvent, questionId: string) => {
+    e.preventDefault()
+    navigate(`/questions/${questionId}`)
+  }
+
   return (
     <main className="flex-1 flex flex-col overflow-hidden bg-[#08080A]">
       
@@ -45,6 +53,7 @@ export default function QuestionFeed({ questions = [] }: { questions: Question[]
             <Link
               key={q.id}
               href={`/questions/${q.id}`}
+              onClick={(e) => handleQuestionClick(e, q.id)}
               className="h-[52px] px-6 flex items-center gap-4 border-b border-white/[0.03] active-border-hover group cursor-pointer transition-colors block"
             >
               {/* Upvotes */}

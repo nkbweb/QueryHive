@@ -18,7 +18,7 @@ CREATE TABLE questions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   content TEXT NOT NULL,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   views INTEGER DEFAULT 0,
   upvotes INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -30,7 +30,7 @@ CREATE TABLE answers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   content TEXT NOT NULL,
   question_id UUID REFERENCES questions(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   is_ai BOOLEAN DEFAULT FALSE,
   status TEXT DEFAULT 'draft',
   upvotes INTEGER DEFAULT 0,
@@ -62,7 +62,7 @@ CREATE TABLE question_tags (
 -- Votes table
 CREATE TABLE votes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   target_type TEXT NOT NULL,
   target_id UUID NOT NULL,
   value INTEGER NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   content TEXT NOT NULL,
   answer_id UUID REFERENCES answers(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -85,7 +85,7 @@ CREATE TABLE comments (
 -- Notifications table
 CREATE TABLE notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   type TEXT NOT NULL,
   data JSONB,
   read BOOLEAN DEFAULT FALSE,

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+import { useNavigationWithLoading } from '@/hooks/useNavigationWithLoading'
 
 export function SignupForm() {
   const [name, setName] = useState('')
@@ -13,6 +14,7 @@ export function SignupForm() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const { navigate } = useNavigationWithLoading()
   const router = useRouter()
   const supabase = createClient()
 
@@ -51,7 +53,7 @@ export function SignupForm() {
       if (authData.user) {
         // Profile creation is handled automatically by database trigger
         console.log('User created successfully:', authData.user.email)
-        router.push('/login?message=Account created successfully')
+        navigate('/login?message=Account created successfully')
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred during signup')

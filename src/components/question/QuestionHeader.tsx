@@ -58,9 +58,19 @@ export default function QuestionHeader({
             style={{ borderRadius: '50%', width: 32, height: 32, objectFit: 'cover' }}
           />
           <div>
-            <div className="text-[13px] text-white font-semibold">{user.fullName || user.username}</div>
+            <Link
+              href={`/profile/${user.username}`}
+              className="text-[13px] text-white font-semibold hover:text-[#E8FF47] transition-colors"
+            >
+              {user.fullName || user.username}
+            </Link>
             <div className="flex items-center gap-2">
-              <span className="text-[12px] text-white/40 font-medium">@{user.username}</span>
+              <Link
+                href={`/profile/${user.username}`}
+                className="text-[12px] text-white/40 font-medium hover:text-[#E8FF47] transition-colors"
+              >
+                @{user.username}
+              </Link>
               <span className="text-white/20">·</span>
               <span className="text-white/40">asked {createdAt}</span>
               <span className="text-white/20">·</span>

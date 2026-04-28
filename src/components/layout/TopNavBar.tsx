@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { getProfileImagePlaceholder } from '@/lib/storage/profile-images'
 import { useAuth } from '@/lib/auth'
 import { useNotifications } from '@/hooks/useNotifications'
+import { useNavigationWithLoading } from '@/hooks/useNavigationWithLoading'
 import { AuthUser } from '@/types'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -16,6 +17,7 @@ export default function TopNavBar() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const { logout } = useAuth()
   const { unreadCount } = useNotifications()
+  const { navigate } = useNavigationWithLoading()
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -72,30 +74,25 @@ export default function TopNavBar() {
   }, [showUserMenu])
 
   return (
-    <nav className="fixed top-0 w-full h-[56px] border-b border-surface-container-low bg-surface flex justify-between items-center px-6 z-50 backdrop-blur-sm">
+    <nav className="fixed top-0 w-full h-[56px] border-b border-surface-container-low bg-surface flex justify-between items-center px-3 z-50 backdrop-blur-sm">
       <div className="flex items-center gap-8">
         <div className="flex items-center gap-3">
-          <span className="text-lime-accent text-[28px] font-bold leading-none">⬡</span>
+          <span className="text-lime-accent text-[40px] font-bold leading-none">⬡</span>
           <span className="text-xl font-bold text-white tracking-tight">QueryHive</span>
-        </div>
-        <div className="hidden md:flex relative group">
-          <input 
-            className="w-[360px] h-9 bg-surface-container-low border border-surface-container text-sm px-4 focus:outline-none focus:border-lime-accent focus:bg-surface-container text-white placeholder-white/40 transition-all rounded-sm" 
-            placeholder="Search questions..." 
-            type="text"
-          />
-          <div className="absolute right-3 top-2.5 text-xs text-white/30 font-mono">⌘K</div>
         </div>
       </div>
       <div className="flex items-center gap-4">
-        <Link href="/notifications" className="relative cursor-pointer group flex items-center justify-center">
+        <button 
+          onClick={() => navigate('/notifications')}
+          className="relative cursor-pointer group flex items-center justify-center bg-transparent border-none outline-none"
+        >
           <span className="material-symbols-outlined text-white/60 text-[40px] group-hover:text-white/80 transition-colors">notifications</span>
           {unreadCount > 0 && (
             <span className="absolute top-1 right-1 w-5 h-5 bg-lime-accent rounded-full flex items-center justify-center text-[10px] font-bold text-black">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
-        </Link>
+        </button>
         {user ? (
           <div className="relative flex items-center" ref={userMenuRef}>
             <button
@@ -124,14 +121,16 @@ export default function TopNavBar() {
                 </div>
                 <div className="py-2">
                   {username && (
-                    <Link
-                      href={`/profile/${username}`}
-                      onClick={() => setShowUserMenu(false)}
-                      className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-surface-container-high transition-colors flex items-center gap-3"
+                    <button
+                      onClick={() => {
+                        navigate(`/profile/${username}`)
+                        setShowUserMenu(false)
+                      }}
+                      className="w-full px-4 py-2.5 text-left text-sm text-white/70 hover:text-white hover:bg-surface-container-high transition-colors flex items-center gap-3 bg-transparent border-none outline-none"
                     >
                       <span className="material-symbols-outlined text-[18px]">person</span>
                       <span>My Profile</span>
-                    </Link>
+                    </button>
                   )}
                   <button
                     onClick={() => {
@@ -152,11 +151,12 @@ export default function TopNavBar() {
             <span className="material-symbols-outlined text-white/40 text-[20px]">account_circle</span>
           </div>
         )}
-        <Link href="/ask">
-          <button className="bg-lime-accent text-neutral text-sm font-semibold px-3 py-2 hover:bg-lime-accent/90 hover:shadow-lg hover:shadow-lime-accent/30 transition-all duration-200 rounded-sm flex-shrink-0 flex items-center">
-            Ask
-          </button>
-        </Link>
+        <button 
+          onClick={() => navigate('/ask')}
+          className="bg-lime-accent text-neutral text-sm font-semibold px-3 py-2 hover:bg-lime-accent/90 hover:shadow-lg hover:shadow-lime-accent/30 transition-all duration-200 rounded-sm flex-shrink-0 flex items-center"
+        >
+          Ask
+        </button>
       </div>
     </nav>
   )

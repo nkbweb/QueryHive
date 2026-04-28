@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useNavigationWithLoading } from '@/hooks/useNavigationWithLoading'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const { navigate } = useNavigationWithLoading()
   const router = useRouter()
   const supabase = createClient()
 
@@ -25,7 +27,7 @@ export function LoginForm() {
 
       if (error) throw error
 
-      router.push('/')
+      navigate('/home')
       router.refresh()
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred during login')

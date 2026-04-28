@@ -2,11 +2,15 @@
 
 import Markdown from '@/lib/utils/markdown'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getUserVote, updateVote } from '@/lib/queries/votes'
+import { ChevronUp, ChevronDown, MessageCircle } from 'lucide-react'
 import Comment from './Comment'
 import CommentForm from './CommentForm'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import FollowButton from '@/components/follow/FollowButton'
 
 interface AnswerProps {
   answer: {
@@ -38,9 +42,10 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
   const [downvotes, setDownvotes] = useState(answer.downvotes)
   const [comments, setComments] = useState<any[]>([])
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
-  const [showComments, setShowComments] = useState(true)
+  const [showComments, setShowComments] = useState(false)
   const [showAllComments, setShowAllComments] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | undefined>()
+  const [isLoadingComments, setIsLoadingComments] = useState(false)
 
   useEffect(() => {
     const fetchUserVote = async () => {
@@ -55,6 +60,7 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
   }, [answer.id])
 
   const fetchComments = useCallback(async () => {
+    setIsLoadingComments(true)
     try {
       const response = await fetch(`/api/comments?answerId=${answer.id}`)
       const data = await response.json()
@@ -63,6 +69,8 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
       }
     } catch (error) {
       console.error('Error fetching comments:', error)
+    } finally {
+      setIsLoadingComments(false)
     }
   }, [answer.id])
 
@@ -145,10 +153,20 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
               style={{ width: 32, height: 32, objectFit: 'cover' }}
             />
           </div>
-          <div>
-            <div className="text-[13px] text-white font-semibold">{answer.user.fullName || answer.user.username}</div>
+          <div className="flex-1">
+            <Link
+                href={`/profile/${answer.user.username}`}
+                className="text-[13px] text-white font-semibold hover:text-[#E8FF47] transition-colors"
+              >
+                {answer.user.fullName || answer.user.username}
+              </Link>
             <div className="flex items-center gap-2">
-              <span className="text-[12px] text-white/40 font-medium">@{answer.user.username}</span>
+              <Link
+                href={`/profile/${answer.user.username}`}
+                className="text-[12px] text-white/40 font-medium hover:text-[#E8FF47] transition-colors"
+              >
+                @{answer.user.username}
+              </Link>
               <span className="text-white/20 text-[10px]">·</span>
               <span className="text-[11px] text-white/30 font-label">
                 {answer.user.reputation >= 1000
@@ -159,9 +177,17 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
               <span className="text-[11px] text-white/30 font-label">{answer.createdAt}</span>
             </div>
           </div>
+          {currentUserId && currentUserId !== answer.user.id && (
+            <FollowButton
+              userId={answer.user.id}
+              username={answer.user.username}
+              currentUserId={currentUserId}
+              size="sm"
+            />
+          )}
         </div>
 
-        {/* Votes */}
+        {/* Votes and Comments */}
         <div className="flex items-center gap-3">
           <button
             onClick={() => handleVote(1)}
@@ -170,7 +196,7 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
               currentUserVote === 1 ? 'text-lime-accent' : 'text-white/25 hover:text-white/60'
             }`}
           >
-            <span className="material-symbols-outlined text-[16px]">arrow_drop_up</span>
+            <ChevronUp className="w-8 h-8" />
             <span className="text-[11px] font-mono tabular-nums">{upvotes}</span>
           </button>
 
@@ -181,66 +207,77 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
               currentUserVote === -1 ? 'text-error' : 'text-white/25 hover:text-white/60'
             }`}
           >
-            <span className="material-symbols-outlined text-[16px]">arrow_drop_down</span>
+            <ChevronDown className="w-8 h-8" />
             <span className="text-[11px] font-mono tabular-nums">{downvotes}</span>
+          </button>
+
+          {/* Comment Icon Button */}
+          <button
+            onClick={() => setShowComments(!showComments)}
+            className={`flex items-center gap-1 transition-colors duration-150 ${
+              showComments ? 'text-lime-accent' : 'text-white/25 hover:text-white/60'
+            }`}
+            title={`${showComments ? 'Hide' : 'Show'} comments`}
+          >
+            <MessageCircle className={`w-6 h-6 ${showComments ? 'fill-current' : ''}`} />
+            <span className="text-[11px] font-mono tabular-nums">{comments.length}</span>
           </button>
         </div>
 
       </div>
 
       {/* Comments Section */}
+      {showComments && (
       <div className="mt-4 pt-4 border-t border-white/[0.06]">
-        <button
-          onClick={() => setShowComments(!showComments)}
-          className="text-[11px] text-white/30 hover:text-white/60 font-label transition-colors flex items-center gap-1"
-        >
-          <span className="material-symbols-outlined text-[14px]">
-            {showComments ? 'expand_less' : 'expand_more'}
-          </span>
-          {comments.length > 0 ? `${comments.length} comment${comments.length !== 1 ? 's' : ''}` : 'Add a comment'}
-        </button>
+        <div className="mt-4">
+          {isLoadingComments && (
+            <div className="flex items-center justify-center py-8">
+              <LoadingSpinner size="md" />
+            </div>
+          )}
+          {!isLoadingComments && (
+            <>
+              {/* Top-level Comment Form */}
+              <CommentForm
+                answerId={answer.id}
+                onCommentAdded={(newComment) => {
+                  setComments([...comments, newComment])
+                }}
+              />
 
-        {showComments && (
-          <div className="mt-4">
-            {/* Top-level Comment Form */}
-            <CommentForm
-              answerId={answer.id}
-              onCommentAdded={(newComment) => {
-                setComments([...comments, newComment])
-              }}
-            />
-
-            {/* Comments List */}
-            {comments.length > 0 && (
-              <div className="mt-4">
-                {comments
-                  .filter(c => !c.parentId)
-                  .slice(0, showAllComments ? undefined : 3)
-                  .map(comment => (
-                    <Comment
-                      key={comment.id}
-                      comment={comment}
-                      allComments={comments}
-                      setAllComments={setComments}
-                      onReply={setReplyingTo}
-                      replyingTo={replyingTo}
-                      currentUserId={currentUserId}
-                      answerId={answer.id}
-                    />
-                  ))}
-                {comments.filter(c => !c.parentId).length > 3 && !showAllComments && (
-                  <button
-                    onClick={() => setShowAllComments(true)}
-                    className="mt-3 text-[11px] text-white/30 hover:text-white/60 font-label transition-colors"
-                  >
-                    Show more comments
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+              {/* Comments List */}
+              {comments.length > 0 && (
+                <div className="mt-4">
+                  {comments
+                    .filter(c => !c.parentId)
+                    .slice(0, showAllComments ? undefined : 3)
+                    .map(comment => (
+                      <Comment
+                        key={comment.id}
+                        comment={comment}
+                        allComments={comments}
+                        setAllComments={setComments}
+                        onReply={setReplyingTo}
+                        replyingTo={replyingTo}
+                        currentUserId={currentUserId}
+                        answerId={answer.id}
+                      />
+                    ))}
+                  {comments.filter(c => !c.parentId).length > 3 && !showAllComments && (
+                    <button
+                      onClick={() => setShowAllComments(true)}
+                      className="mt-3 text-[11px] text-white/30 hover:text-white/60 font-label transition-colors"
+                    >
+                      Show more comments
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
+      )}
     </div>
   )
 }

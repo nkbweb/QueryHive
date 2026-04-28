@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { useNavigationWithLoading } from '@/hooks/useNavigationWithLoading'
 
 interface NavItem {
   icon: string
@@ -19,13 +20,13 @@ export default function LeftSidebar() {
   const navItems = useMemo(() => [
     { icon: 'home', label: 'Home', route: '/home' },
     { icon: 'explore', label: 'Explore', route: '/explore' },
+    { icon: 'people', label: 'Following', route: '/following' },
     { icon: 'help', label: 'Ask Question', route: '/ask' },
     { icon: 'bookmark', label: 'Bookmarks', route: '/bookmarks' },
   ], [])
 
-  const bottomItems = useMemo(() => [
-    { icon: 'account_circle', label: 'Account', route: '/account' },
-    { icon: 'settings', label: 'Settings', route: '/settings' },
+  const bottomItems: NavItem[] = useMemo(() => [
+    // { icon: 'settings', label: 'Settings', route: '/settings' }, // Hidden for now
   ], [])
 
   const allItems = useMemo(() => [...navItems, ...bottomItems], [navItems, bottomItems])
@@ -35,9 +36,11 @@ export default function LeftSidebar() {
     if (match) setActiveRoute(match.route)
   }, [pathname, allItems])
 
+  const { navigate } = useNavigationWithLoading()
+
   const handleNavigation = (route: string) => {
     setActiveRoute(route)
-    router.push(route)
+    navigate(route)
   }
 
   const NavButton = ({
@@ -61,6 +64,7 @@ export default function LeftSidebar() {
             : 'text-white hover:bg-white/5'
           }
         `}
+        title={item.label}
       >
         {/* Active pill background */}
         {isActive && (
@@ -112,7 +116,7 @@ export default function LeftSidebar() {
 
       {/* Bottom nav */}
       <div className="mt-auto flex flex-col gap-0.5 px-2">
-        {bottomItems.map(item => (
+        {bottomItems.length > 0 && bottomItems.map(item => (
           <NavButton key={item.route} item={item} isBottom />
         ))}
 

@@ -7,6 +7,8 @@ import Image from 'next/image'
 import QuestionsList from './QuestionsList'
 import AnswersList from './AnswersList'
 import CommentsList from './CommentsList'
+import FollowButton from '@/components/follow/FollowButton'
+import FollowStatus from '@/components/follow/FollowStatus'
 
 interface Profile {
   id: string
@@ -15,6 +17,8 @@ interface Profile {
   avatar_url: string | null
   reputation: number
   created_at: string
+  followers_count?: number
+  following_count?: number
 }
 
 interface ProfileViewProps {
@@ -128,6 +132,14 @@ export default function ProfileView({ profile, isOwnProfile, currentUserId, ques
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-2xl font-semibold text-white">{profile.username}</h1>
+                {!isOwnProfile && (
+                  <FollowButton
+                    userId={profile.id}
+                    username={profile.username}
+                    currentUserId={currentUserId}
+                    size="md"
+                  />
+                )}
                 {isOwnProfile && (
                   <button
                     onClick={() => setIsEditing(!isEditing)}
@@ -171,6 +183,15 @@ export default function ProfileView({ profile, isOwnProfile, currentUserId, ques
                     {new Date(profile.created_at).toLocaleDateString()}
                   </span>
                 </div>
+              </div>
+
+              {/* Follow Status */}
+              <div className="mt-4">
+                <FollowStatus
+                  followersCount={profile.followers_count || 0}
+                  followingCount={profile.following_count || 0}
+                  userId={profile.id}
+                />
               </div>
             </div>
           </div>
