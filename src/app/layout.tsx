@@ -20,6 +20,30 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "QueryHive",
   description: "Where AI answers meet human expertise",
+  manifest: "/manifest.json",
+  themeColor: "#1f2937",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "QueryHive",
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: "QueryHive",
+    title: "QueryHive",
+    description: "Where AI answers meet human expertise",
+  },
+  twitter: {
+    card: "summary",
+    title: "QueryHive",
+    description: "Where AI answers meet human expertise",
+  },
 };
 
 export default function RootLayout({
