@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import Link from 'next/link'
 import Image from 'next/image'
 import QuestionsList from './QuestionsList'
 import AnswersList from './AnswersList'
@@ -30,42 +29,48 @@ interface ProfileViewProps {
   comments: any[]
 }
 
-export default function ProfileView({ profile, isOwnProfile, currentUserId, questions, answers, comments }: ProfileViewProps) {
+const TABS = ['questions', 'answers', 'comments'] as const
+type Tab = typeof TABS[number]
+
+export default function ProfileView({
+  profile,
+  isOwnProfile,
+  currentUserId,
+  questions,
+  answers,
+  comments,
+}: ProfileViewProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [fullName, setFullName] = useState(profile.full_name || '')
   const [isUploading, setIsUploading] = useState(false)
-  const [activeTab, setActiveTab] = useState<'questions' | 'answers' | 'comments'>('questions')
+  const [activeTab, setActiveTab] = useState<Tab>('questions')
+
+  const tabCounts: Record<Tab, number> = {
+    questions: questions.length,
+    answers: answers.length,
+    comments: comments.length,
+  }
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
-    setAvatarFile(file)
     setIsUploading(true)
-
     try {
       const supabase = createClient()
       const fileExt = file.name.split('.').pop()
       const fileName = `${currentUserId}/${Date.now()}.${fileExt}`
-
       const { error: uploadError } = await supabase.storage
         .from('profile-images')
         .upload(fileName, file)
-
       if (uploadError) throw uploadError
-
       const { data: { publicUrl } } = supabase.storage
         .from('profile-images')
         .getPublicUrl(fileName)
-
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
         .eq('id', currentUserId)
-
       if (updateError) throw updateError
-
       window.location.reload()
     } catch (error) {
       console.error('Error uploading avatar:', error)
@@ -81,9 +86,7 @@ export default function ProfileView({ profile, isOwnProfile, currentUserId, ques
         .from('profiles')
         .update({ full_name: fullName })
         .eq('id', currentUserId)
-
       if (error) throw error
-
       setIsEditing(false)
       window.location.reload()
     } catch (error) {
@@ -91,32 +94,51 @@ export default function ProfileView({ profile, isOwnProfile, currentUserId, ques
     }
   }
 
+  const joinedDate = new Date(profile.created_at).toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  })
+
   return (
-    <div className="flex h-full bg-[#08080A]">
-      {/* Main Content */}
+    <div className="flex h-full bg-surface">
       <main className="flex-1 overflow-y-auto no-scrollbar">
-        {/* Profile Header */}
-        <div className="p-6 border-b border-white/[0.03]">
-          <div className="flex items-start gap-6">
+
+        {/* ── Profile Header ── */}
+        <div className="px-6 pt-8 pb-0">
+
+          {/* Top: avatar + core info */}
+          <div className="flex items-start gap-5 mb-6">
+
             {/* Avatar */}
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-[#131315] border border-white/[0.05] flex items-center justify-center overflow-hidden">
+            <div className="relative flex-shrink-0 group">
+              <div className="w-20 h-20 rounded-xl bg-surface-container border border-surface-container-high/40 flex items-center justify-center overflow-hidden">
                 {profile.avatar_url ? (
                   <Image
                     src={profile.avatar_url}
                     alt={profile.username}
                     fill
-                    className="object-cover"
+                    className="object-cover transition-opacity group-hover:opacity-80"
                   />
                 ) : (
-                  <span className="text-3xl font-bold text-white/40">
+                  <span className="text-3xl font-semibold text-white/30 select-none">
                     {profile.username[0].toUpperCase()}
                   </span>
                 )}
               </div>
+
               {isOwnProfile && (
-                <label className="absolute bottom-0 right-0 w-8 h-8 bg-primary-container rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-container/80 transition-colors">
-                  <span className="material-symbols-outlined text-[16px] text-black">edit</span>
+                <label className={`
+                  absolute -bottom-2 -right-2
+                  w-6 h-6 rounded-full
+                  bg-surface-container-high border border-surface-container-high
+                  flex items-center justify-center
+                  cursor-pointer transition-all
+                  hover:bg-white/10
+                  ${isUploading ? 'opacity-50 pointer-events-none' : ''}
+                `}>
+                  <span className="material-symbols-outlined text-[12px] text-white/60">
+                    {isUploading ? 'hourglass_empty' : 'photo_camera'}
+                  </span>
                   <input
                     type="file"
                     accept="image/*"
@@ -128,144 +150,142 @@ export default function ProfileView({ profile, isOwnProfile, currentUserId, ques
               )}
             </div>
 
-            {/* Profile Info */}
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-semibold text-white">{profile.username}</h1>
-                {!isOwnProfile && (
-                  <FollowButton
-                    userId={profile.id}
-                    username={profile.username}
-                    currentUserId={currentUserId}
-                    size="md"
-                  />
-                )}
-                {isOwnProfile && (
-                  <button
-                    onClick={() => setIsEditing(!isEditing)}
-                    className="px-3 py-1 text-xs bg-white/[0.05] border border-white/[0.1] text-white/60 hover:text-white hover:border-white/[0.2] transition-colors"
-                  >
-                    {isEditing ? 'Cancel' : 'Edit Profile'}
-                  </button>
-                )}
+            {/* Identity */}
+            <div className="flex-1 min-w-0 pt-0.5">
+              <div className="flex items-start justify-between gap-3 mb-1">
+                <div className="min-w-0">
+                  <h1 className="text-xl font-semibold text-white tracking-tight leading-tight truncate">
+                    {profile.username}
+                  </h1>
+                  {!isEditing && (
+                    <p className="text-[13px] text-white/40 mt-0.5 truncate">
+                      {profile.full_name || 'No display name'}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex-shrink-0 flex items-center gap-2 mt-0.5">
+                  {!isOwnProfile && (
+                    <FollowButton
+                      userId={profile.id}
+                      username={profile.username}
+                      currentUserId={currentUserId}
+                      size="md"
+                    />
+                  )}
+                  {isOwnProfile && (
+                    <button
+                      onClick={() => setIsEditing(!isEditing)}
+                      className="px-3 py-1.5 text-[13px] font-medium text-white/50 border border-surface-container-high rounded-lg hover:bg-surface-container hover:text-white/80 transition-all"
+                    >
+                      {isEditing ? 'Cancel' : 'Edit profile'}
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {isEditing ? (
-                <div className="mb-4">
+              {/* Inline edit form */}
+              {isEditing && (
+                <div className="flex gap-2 mt-2 mb-3">
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Full name"
-                    className="w-full px-3 py-2 bg-[#131315] border border-white/[0.1] rounded-lg text-white text-sm focus:outline-none focus:border-primary-container/50"
+                    placeholder="Your display name"
+                    className="flex-1 px-3 py-1.5 bg-surface-container border border-surface-container-high rounded-lg text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-white/20 transition-colors"
                   />
                   <button
                     onClick={handleProfileUpdate}
-                    className="mt-2 px-4 py-1.5 bg-primary-container text-black text-sm font-medium rounded-lg hover:bg-primary-container/80 transition-colors"
+                    className="px-4 py-1.5 bg-white/10 border border-white/10 text-white text-sm rounded-lg hover:bg-white/15 transition-colors"
                   >
-                    Save Changes
+                    Save
                   </button>
                 </div>
-              ) : (
-                <p className="text-white/60 text-sm mb-4">
-                  {profile.full_name || 'No name set'}
-                </p>
               )}
 
-              <div className="flex items-center gap-6 text-sm">
-                <div>
-                  <span className="text-white/40">Reputation</span>
-                  <span className="ml-2 text-primary-container font-medium">{profile.reputation}</span>
+              {/* Meta chips */}
+              <div className="flex items-center gap-2 flex-wrap mt-2">
+                {/* Reputation */}
+                <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/15 text-amber-400 text-[12px] font-medium">
+                  <span className="material-symbols-outlined text-[13px]">star</span>
+                  {profile.reputation.toLocaleString()}
+                  <span className="text-amber-500/60 font-normal ml-0.5">rep</span>
                 </div>
-                <div>
-                  <span className="text-white/40">Joined</span>
-                  <span className="ml-2 text-white/60">
-                    {new Date(profile.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-              </div>
 
-              {/* Follow Status */}
-              <div className="mt-4">
-                <FollowStatus
-                  followersCount={profile.followers_count || 0}
-                  followingCount={profile.following_count || 0}
-                  userId={profile.id}
-                />
+                {/* Joined */}
+                <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-surface-container border border-surface-container-high text-white/35 text-[12px]">
+                  <span className="material-symbols-outlined text-[13px]">calendar_today</span>
+                  {joinedDate}
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Stats bar */}
+          <div className="flex items-stretch gap-px bg-surface-container-low rounded-xl overflow-hidden mb-0 border border-surface-container-low">
+            {[
+              { label: 'Questions', value: questions.length, icon: 'help' },
+              { label: 'Answers', value: answers.length, icon: 'forum' },
+              { label: 'Followers', value: profile.followers_count ?? 0, icon: 'group' },
+              { label: 'Following', value: profile.following_count ?? 0, icon: 'person_add' },
+            ].map((stat, i) => (
+              <div
+                key={stat.label}
+                className="flex-1 flex flex-col items-center justify-center py-3 gap-0.5 bg-surface hover:bg-surface-container/50 transition-colors cursor-default"
+              >
+                <span className="text-[17px] font-semibold text-white leading-tight">
+                  {stat.value.toLocaleString()}
+                </span>
+                <span className="text-[11px] text-white/30 uppercase tracking-wider">
+                  {stat.label}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Activity Section */}
-        <div className="p-6">
-          <h2 className="text-lg font-medium text-white mb-4">Activity</h2>
+        {/* ── Activity Section ── */}
+        <div className="px-6 py-6">
 
-          {/* Tabs */}
-          <div className="flex gap-6 border-b border-white/[0.03] mb-4">
-            <button
-              onClick={() => setActiveTab('questions')}
-              className={`pb-2 border-b-2 text-sm transition-colors ${
-                activeTab === 'questions'
-                  ? 'border-primary-container text-white'
-                  : 'border-transparent text-white/50 hover:text-white'
-              }`}
-            >
-              Questions ({questions.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('answers')}
-              className={`pb-2 border-b-2 text-sm transition-colors ${
-                activeTab === 'answers'
-                  ? 'border-primary-container text-white'
-                  : 'border-transparent text-white/50 hover:text-white'
-              }`}
-            >
-              Answers ({answers.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('comments')}
-              className={`pb-2 border-b-2 text-sm transition-colors ${
-                activeTab === 'comments'
-                  ? 'border-primary-container text-white'
-                  : 'border-transparent text-white/50 hover:text-white'
-              }`}
-            >
-              Comments ({comments.length})
-            </button>
+          {/* Tab bar */}
+          <div className="flex gap-1 p-1 bg-surface-container rounded-xl mb-5 border border-surface-container-low">
+            {TABS.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`
+                  flex-1 flex items-center justify-center gap-2
+                  py-1.5 px-3 rounded-lg text-[13px] font-medium
+                  transition-all capitalize
+                  ${activeTab === tab
+                    ? 'bg-surface-container-high text-white shadow-sm'
+                    : 'text-white/40 hover:text-white/70'
+                  }
+                `}
+              >
+                {tab}
+                <span className={`
+                  text-[11px] px-1.5 py-0.5 rounded-md font-normal
+                  ${activeTab === tab
+                    ? 'bg-white/10 text-white/70'
+                    : 'bg-surface-container text-white/25'
+                  }
+                `}>
+                  {tabCounts[tab]}
+                </span>
+              </button>
+            ))}
           </div>
 
-          {/* Tab Content */}
-          <div className="mt-4">
+          {/* Tab content */}
+          <div>
             {activeTab === 'questions' && <QuestionsList questions={questions} />}
             {activeTab === 'answers' && <AnswersList answers={answers} />}
             {activeTab === 'comments' && <CommentsList comments={comments} />}
           </div>
         </div>
-      </main>
 
-      {/* Sidebar */}
-      <aside className="w-[220px] h-full bg-[#131315] border-l border-[#1C1B1E] p-4">
-        <h3 className="text-[11px] font-bold text-white/30 uppercase tracking-widest mb-4">Stats</h3>
-        <div className="flex flex-col gap-3">
-          <div className="flex justify-between">
-            <span className="text-[11px] text-white/60">Questions</span>
-            <span className="text-[11px] text-white/40">{questions.length}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[11px] text-white/60">Answers</span>
-            <span className="text-[11px] text-white/40">{answers.length}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[11px] text-white/60">Comments</span>
-            <span className="text-[11px] text-white/40">{comments.length}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[11px] text-white/60">Reputation</span>
-            <span className="text-[11px] text-primary-container">{profile.reputation}</span>
-          </div>
-        </div>
-      </aside>
+      </main>
     </div>
   )
 }

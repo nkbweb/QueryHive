@@ -242,23 +242,23 @@ export default function ExplorePage() {
                   key={q.id}
                   href={`/questions/${q.id}`}
                   onClick={(e) => handleQuestionClick(e, q.id)}
-                  className="px-4 py-3 flex items-start gap-4 border-b border-white/[0.03] group block"
+                  className="px-5 py-4 flex items-start gap-4 border-b border-white/[0.03] group block"
                 >
-                  {/* Upvotes */}
-                  <div className="w-10 text-[11px] font-label text-white/40 flex flex-col items-center group-hover:text-primary-container shrink-0">
+                  {/* Upvotes - Hidden on mobile */}
+                  <div className="hidden md:flex w-10 text-[11px] font-label text-white/40 flex-col items-center group-hover:text-primary-container shrink-0">
                     <span className="text-[8px]">+</span>
                     <span>{q.upvotes}</span>
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm text-white group-hover:text-primary-container mb-1 line-clamp-2">
+                    <h3 className="text-base text-white group-hover:text-primary-container mb-2 line-clamp-2 font-medium">
                       {q.title}
                     </h3>
-                    <p className="text-xs text-white/50 mb-2 line-clamp-2">
+                    <p className="text-sm text-white/50 mb-3 line-clamp-2">
                       {q.content}
                     </p>
-                    <div className="flex items-center gap-3 text-[11px] text-white/30 font-label">
+                    <div className="flex items-center gap-3 text-xs text-white/30 font-label">
                       <span>{q.username}</span>
                       <span>•</span>
                       <span>{q.createdAt}</span>
@@ -266,11 +266,11 @@ export default function ExplorePage() {
                       <span className="text-white/60">{q.answerCount} answers</span>
                     </div>
                     {q.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-2">
+                      <div className="flex flex-wrap gap-2 mt-3">
                         {q.tags.map((tag) => (
                           <span
                             key={tag.id}
-                            className="px-2 py-0.5 bg-surface-container text-[10px] font-label text-white/60 border border-white/5"
+                            className="px-2.5 py-1 bg-surface-container text-xs font-label text-white/60 border border-white/5"
                           >
                             {tag.name}
                           </span>
@@ -285,8 +285,10 @@ export default function ExplorePage() {
         </div>
       </main>
 
-      {/* Sidebar */}
-      <ExploreSidebar tags={tags} users={users} stats={stats} onTagClick={handleTagClick} activeTagId={activeTagId} />
+      {/* Sidebar - Hidden on mobile */}
+      <div className="hidden lg:block">
+        <ExploreSidebar tags={tags} users={users} stats={stats} onTagClick={handleTagClick} activeTagId={activeTagId} />
+      </div>
     </div>
   )
 }

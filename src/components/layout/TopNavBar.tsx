@@ -74,21 +74,21 @@ export default function TopNavBar() {
   }, [showUserMenu])
 
   return (
-    <nav className="fixed top-0 w-full h-[56px] border-b border-surface-container-low bg-surface flex justify-between items-center px-3 z-50 backdrop-blur-sm">
+    <nav className="fixed top-0 w-full h-[56px] border-b border-surface-container-low bg-surface flex justify-between items-center px-3 z-50 backdrop-blur-sm overflow-visible">
       <div className="flex items-center gap-8">
         <div className="flex items-center gap-3">
           <span className="text-lime-accent text-[40px] font-bold leading-none">⬡</span>
           <span className="text-xl font-bold text-white tracking-tight">QueryHive</span>
         </div>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-5 overflow-visible">
         <button 
           onClick={() => navigate('/notifications')}
-          className="relative cursor-pointer group flex items-center justify-center bg-transparent border-none outline-none"
+          className="relative cursor-pointer group flex items-center justify-center w-10 h-10 rounded-lg bg-surface-container-high/50 border border-transparent hover:border-lime-accent/30 hover:bg-surface-container-high transition-all duration-200"
         >
-          <span className="material-symbols-outlined text-white/60 text-[40px] group-hover:text-white/80 transition-colors">notifications</span>
+          <span className="material-symbols-outlined text-white/70 !text-[24px] group-hover:text-white transition-colors leading-none">notifications</span>
           {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 w-5 h-5 bg-lime-accent rounded-full flex items-center justify-center text-[10px] font-bold text-black">
+            <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] bg-lime-accent rounded-full flex items-center justify-center text-[10px] font-bold text-black px-1.5 shadow-lg shadow-lime-accent/30 border-2 border-surface">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -97,7 +97,7 @@ export default function TopNavBar() {
           <div className="relative flex items-center" ref={userMenuRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="w-10 h-10 rounded-full overflow-hidden transition-all duration-200 flex-shrink-0"
+              className="w-10 h-10 rounded-full overflow-hidden transition-all duration-200 flex-shrink-0 ring-2 ring-transparent hover:ring-lime-accent/50"
             >
               <Image 
                   className="w-full h-full object-cover" 
@@ -147,15 +147,16 @@ export default function TopNavBar() {
             )}
           </div>
         ) : (
-          <div className="w-10 h-10 rounded-full bg-surface-container-high border border-outline-variant/30 flex items-center justify-center hover:border-lime-accent/50 transition-colors flex-shrink-0">
-            <span className="material-symbols-outlined text-white/40 text-[20px]">account_circle</span>
+          <div className="w-10 h-10 rounded-full bg-surface-container-high border border-outline-variant/30 flex items-center justify-center hover:border-lime-accent/50 hover:bg-surface-container-high/80 transition-all duration-200 flex-shrink-0">
+            <span className="material-symbols-outlined text-white/50 !text-[24px]">account_circle</span>
           </div>
         )}
         <button 
           onClick={() => navigate('/ask')}
-          className="bg-lime-accent text-neutral text-sm font-semibold px-3 py-2 hover:bg-lime-accent/90 hover:shadow-lg hover:shadow-lime-accent/30 transition-all duration-200 rounded-sm flex-shrink-0 flex items-center"
+          className="hidden sm:flex bg-gradient-to-r from-lime-accent to-lime-400 text-neutral text-sm font-bold px-5 py-2.5 rounded-full flex-shrink-0 items-center gap-2 shadow-lg shadow-lime-accent/20"
         >
-          Ask
+          <span className="material-symbols-outlined !text-[18px]">add_circle</span>
+          <span>Ask</span>
         </button>
       </div>
     </nav>

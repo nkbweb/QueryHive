@@ -121,26 +121,26 @@ export default function BookmarksPage() {
   }
 
   return (
-    <main className="pt-[80px] pb-24 min-h-screen flex justify-center">
-      <div className="flex gap-16 w-full max-w-[1020px] px-6">
+    <main className="pt-[20px] sm:pt-[80px] pb-24 min-h-screen flex justify-center">
+      <div className="flex gap-16 w-full max-w-[1020px] px-4 sm:px-6">
         {/* Main Content */}
         <div className="flex-1">
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold tracking-[-0.02em] text-white mb-2">Bookmarks</h1>
-            <p className="text-sm text-white/60">Questions you&apos;ve saved for later</p>
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-[-0.02em] text-white mb-2">Bookmarks</h1>
+            <p className="text-sm text-white/60 hidden sm:block">Questions you&apos;ve saved for later</p>
           </div>
 
           {bookmarks.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="relative inline-block mb-6">
+            <div className="text-center py-12 sm:py-16">
+              <div className="relative inline-block mb-4 sm:mb-6">
                 <div className="absolute inset-0 bg-gradient-to-r from-lime-accent/20 to-blue-accent/20 rounded-full blur-xl"></div>
-                <span className="material-symbols-outlined text-6xl text-lime-accent relative">bookmark_border</span>
+                <span className="material-symbols-outlined text-5xl sm:text-6xl text-lime-accent relative">bookmark_border</span>
               </div>
-              <h2 className="text-xl font-bold text-white mb-3 bg-gradient-to-r from-lime-accent to-blue-accent bg-clip-text text-transparent">No bookmarks yet</h2>
-              <p className="text-white/60 mb-8 max-w-md mx-auto">Start bookmarking questions to build your personal collection and never lose track of important content</p>
+              <h2 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3 bg-gradient-to-r from-lime-accent to-blue-accent bg-clip-text text-transparent">No bookmarks yet</h2>
+              <p className="text-white/60 mb-6 sm:mb-8 max-w-md mx-auto text-sm sm:text-base">Start bookmarking questions to build your personal collection and never lose track of important content</p>
               <Link 
                 href="/home"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-lime-accent to-blue-accent hover:from-lime-accent/90 hover:to-blue-accent/90 text-background px-6 py-3 font-bold uppercase tracking-widest text-xs rounded-lg shadow-lg"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-lime-accent to-blue-accent hover:from-lime-accent/90 hover:to-blue-accent/90 text-background px-5 sm:px-6 py-2.5 sm:py-3 font-bold uppercase tracking-widest text-xs rounded-lg shadow-lg"
               >
                 <span className="material-symbols-outlined text-[16px]">explore</span>
                 Explore Questions
@@ -149,31 +149,31 @@ export default function BookmarksPage() {
           ) : (
             <div className="flex flex-col">
               {bookmarks.map((bookmark, index) => (
-                <div key={bookmark.id} className="h-[52px] px-6 flex items-center gap-4 border-b border-white/[0.03] active-border-hover group">
+                <div key={bookmark.id} className="h-[48px] sm:h-[52px] px-3 sm:px-6 flex items-center gap-3 sm:gap-4 border-b border-white/[0.03] active-border-hover group">
                   {/* Bookmark Icon */}
-                  <div className="w-10 text-[11px] font-label text-lime-accent/60 flex flex-col items-center group-hover:text-lime-accent">
-                    <span className="material-symbols-outlined text-[16px]">bookmark</span>
+                  <div className="w-8 sm:w-10 text-[11px] font-label text-lime-accent/60 flex flex-col items-center group-hover:text-lime-accent hidden sm:flex">
+                    <span className="material-symbols-outlined text-[14px] sm:text-[16px]">bookmark</span>
                   </div>
 
                   {/* Status Dot */}
-                  <div className="w-2.5 h-2.5 bg-lime-accent"></div>
+                  <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-lime-accent hidden sm:block"></div>
 
                   {/* Content */}
                   <div className="flex-1 flex items-center justify-between min-w-0">
-                    <div className="flex flex-col max-w-[600px]">
+                    <div className="flex flex-col max-w-[250px] sm:max-w-[600px]">
                       <Link 
                         href={`/questions/${bookmark.question.id}`}
-                        className="text-sm text-white hover:text-lime-accent truncate"
+                        className="text-xs sm:text-sm text-white hover:text-lime-accent truncate block"
                       >
                         {bookmark.question.title}
                       </Link>
                     </div>
 
                     {/* Right Info */}
-                    <div className="flex items-center gap-6 text-[11px] text-white/30 font-label">
-                      <span>{formatDate(bookmark.question.createdAt)}</span>
+                    <div className="flex items-center gap-3 sm:gap-6 text-[10px] sm:text-[11px] text-white/30 font-label">
+                      <span className="hidden sm:block">{formatDate(bookmark.question.createdAt)}</span>
                       <span className="text-white/60">
-                        {bookmark.question.answersCount} answers
+                        {bookmark.question.answersCount} {bookmark.question.answersCount === 1 ? 'ans' : 'ans'}
                       </span>
                     </div>
                   </div>
@@ -181,10 +181,10 @@ export default function BookmarksPage() {
                   {/* Remove Button */}
                   <button
                     onClick={() => handleRemoveBookmark(bookmark.question.id)}
-                    className="text-white/30 hover:text-red-400 transition-colors"
+                    className="text-white/30 hover:text-red-400 transition-colors p-1"
                     title="Remove bookmark"
                   >
-                    <span className="material-symbols-outlined text-[16px]">bookmark_remove</span>
+                    <span className="material-symbols-outlined text-[14px] sm:text-[16px]">bookmark_remove</span>
                   </button>
                 </div>
               ))}

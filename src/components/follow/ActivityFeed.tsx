@@ -221,8 +221,8 @@ export default function ActivityFeed({ userId, className = '' }: ActivityFeedPro
               </div>
             </div>
 
-            {/* Content */}
-            <div className="ml-11">
+            {/* Content - Hidden on mobile */}
+            <div className="hidden md:block ml-11">
               <Link
                 href={activity.link}
                 className="block group"
