@@ -59,7 +59,6 @@ export default function UserSearch({
     }
 
     setIsLoading(true)
-    setHasSearched(true)
 
     try {
       const response = await fetch(`/api/users/search?q=${encodeURIComponent(searchQuery)}&limit=10`)
@@ -78,6 +77,7 @@ export default function UserSearch({
       setIsOpen(false)
     } finally {
       setIsLoading(false)
+      setHasSearched(true)
     }
   }
 

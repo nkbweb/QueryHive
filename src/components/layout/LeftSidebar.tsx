@@ -36,6 +36,23 @@ export default function LeftSidebar() {
     if (match) setActiveRoute(match.route)
   }, [pathname, allItems])
 
+  // Close sidebar on escape key (mobile only)
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isExpanded) {
+        setIsExpanded(false)
+      }
+    }
+
+    if (isExpanded) {
+      document.addEventListener('keydown', handleEscape)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isExpanded])
+
   const { navigate } = useNavigationWithLoading()
 
   const handleNavigation = (route: string) => {
@@ -99,14 +116,25 @@ export default function LeftSidebar() {
   }
 
   return (
-    <aside
-      className={`
-        h-full bg-[#131315] border-r border-[#1C1B1E]
-        flex flex-col py-3
-        transition-all duration-300 ease-in-out
-        ${isExpanded ? 'w-52' : 'w-14'}
-      `}
-    >
+    <>
+      {/* Mobile backdrop */}
+      {isExpanded && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+          onClick={() => setIsExpanded(false)}
+        />
+      )}
+      
+      <aside
+        className={`
+          h-full lg:h-full bg-[#131315] border-r border-[#1C1B1E]
+          flex flex-col py-3
+          transition-all duration-300 ease-in-out
+          ${isExpanded ? 'w-52' : 'w-14'}
+          lg:relative lg:translate-x-0
+          ${isExpanded ? 'fixed lg:relative top-[56px] lg:top-0 left-0 lg:left-auto z-50 lg:z-auto max-h-[calc(100vh-56px)] lg:max-h-none' : 'relative'}
+        `}
+      >
       {/* Top nav */}
       <div className="flex flex-col gap-0.5 px-2">
         {navItems.map(item => (
@@ -149,6 +177,7 @@ export default function LeftSidebar() {
           </span>
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   )
 }

@@ -29,9 +29,6 @@ export default function TagsSelector({ availableTags, selectedTags, onToggleTag,
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-white mb-3">
-          Tags
-        </label>
         <div className="border border-lime-accent/30 bg-surface-container/50 rounded-lg overflow-hidden shadow-lg">
           <div className="flex gap-4 px-4 py-3 border-b border-lime-accent/20 bg-surface-container-high/30">
             <span className="text-xs font-label text-lime-accent/80">Create tags for your question</span>
