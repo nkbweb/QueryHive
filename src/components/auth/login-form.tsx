@@ -75,7 +75,12 @@ export function LoginForm() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-transparent border-none w-full p-0 text-sm placeholder:text-on-surface-variant/40 focus:ring-0"
+            className="bg-transparent border-none w-full p-0 text-sm text-white placeholder:text-on-surface-variant/40 focus:ring-0"
+            style={{
+              WebkitBoxShadow: '0 0 0 1000px transparent inset',
+              WebkitTextFillColor: 'white',
+              transition: 'background-color 5000s ease-in-out 0s'
+            }}
             placeholder="Email address"
           />
         </div>
@@ -92,7 +97,12 @@ export function LoginForm() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="bg-transparent border-none w-full p-0 text-sm placeholder:text-on-surface-variant/40 focus:ring-0"
+            className="bg-transparent border-none w-full p-0 text-sm text-white placeholder:text-on-surface-variant/40 focus:ring-0"
+            style={{
+              WebkitBoxShadow: '0 0 0 1000px transparent inset',
+              WebkitTextFillColor: 'white',
+              transition: 'background-color 5000s ease-in-out 0s'
+            }}
             placeholder="Password"
           />
           <button 

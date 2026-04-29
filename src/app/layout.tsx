@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
@@ -21,7 +21,6 @@ export const metadata: Metadata = {
   title: "QueryHive",
   description: "Where AI answers meet human expertise",
   manifest: "/manifest.json",
-  themeColor: "#1f2937",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -44,6 +43,10 @@ export const metadata: Metadata = {
     title: "QueryHive",
     description: "Where AI answers meet human expertise",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1f2937",
 };
 
 export default function RootLayout({

@@ -89,7 +89,12 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@tapsy.com"
-                className="w-full bg-transparent outline-none text-sm placeholder:text-neutral-500"
+                className="w-full bg-transparent outline-none text-sm text-white placeholder:text-neutral-500"
+                style={{
+                  WebkitBoxShadow: '0 0 0 1000px transparent inset',
+                  WebkitTextFillColor: 'white',
+                  transition: 'background-color 5000s ease-in-out 0s'
+                }}
                 required
               />
             </div>
@@ -104,7 +109,12 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="•••••••••"
-                className="w-full bg-transparent outline-none text-sm placeholder:text-neutral-500 appearance-none"
+                className="w-full bg-transparent outline-none text-sm text-white placeholder:text-neutral-500 appearance-none"
+                style={{
+                  WebkitBoxShadow: '0 0 0 1000px transparent inset',
+                  WebkitTextFillColor: 'white',
+                  transition: 'background-color 5000s ease-in-out 0s'
+                }}
                 required
               />
               <button type="button" onClick={() => setShowPassword(!showPassword)}>
