@@ -125,6 +125,7 @@ export async function GET(request: NextRequest) {
     const supabase = createSupabaseServerClient()
     const { searchParams } = new URL(request.url)
     const tagId = searchParams.get('tag')
+    const sort = searchParams.get('sort')
 
     let data, error
 
@@ -186,8 +187,8 @@ export async function GET(request: NextRequest) {
       }))
       error = null
     } else {
-      // Fetch all questions
-      const result = await supabase
+      // Fetch all questions with sorting
+      let query = supabase
         .from('questions')
         .select(`
           id,
@@ -210,7 +211,23 @@ export async function GET(request: NextRequest) {
             )
           )
         `)
-        .order('created_at', { ascending: false })
+
+      // Apply sorting based on sort parameter
+      switch (sort) {
+        case 'newest':
+          query = query.order('created_at', { ascending: false })
+          break
+        case 'trending':
+          query = query.order('upvotes', { ascending: false })
+          break
+        case 'unanswered':
+          query = query.order('created_at', { ascending: false }).filter('answers', 'is', 'null')
+          break
+        default:
+          query = query.order('created_at', { ascending: false })
+      }
+
+      const result = await query
 
       data = result.data
       error = result.error

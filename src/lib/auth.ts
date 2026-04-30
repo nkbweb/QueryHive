@@ -183,7 +183,6 @@ export function useAuth() {
       })
 
       console.log('Login attempt result:', { authData, signInError })
-      console.log('AuthData keys:', Object.keys(authData || {}))
       console.log('Session exists:', !!authData.session)
 
       if (signInError) {
@@ -197,12 +196,10 @@ export function useAuth() {
 
       if (authData.user) {
         console.log('Login successful, user data:', authData.user)
-        console.log('Session data:', authData.session)
-        console.log('Access token:', authData.session?.access_token)
         
         // Manually set cookies to ensure persistence
               if (authData.user) {
-          // ✅ Let Supabase handle session
+          //  Let Supabase handle session
           window.location.href = '/home'
         }
       } else {

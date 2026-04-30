@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import MobileVoteButtons from './MobileVoteButtons'
 
 interface QuestionHeaderProps {
   title: string
@@ -18,6 +19,8 @@ interface QuestionHeaderProps {
     name: string
     color?: string
   }>
+  questionId?: string
+  upvotes?: number
 }
 
 // Generate random colors for tags
@@ -36,8 +39,23 @@ export default function QuestionHeader({
   user, 
   createdAt, 
   views, 
-  tags
+  tags,
+  questionId,
+  upvotes
 }: QuestionHeaderProps) {
+  const scrollToAnswerForm = () => {
+    const answerForm = document.getElementById('answer-form')
+    if (answerForm) {
+      answerForm.scrollIntoView({ behavior: 'smooth' })
+      
+      // Add highlight effect
+      answerForm.classList.add('ring-2', 'ring-[#E8FF47]', 'ring-offset-2', 'ring-offset-[#08080A]')
+      setTimeout(() => {
+        answerForm.classList.remove('ring-2', 'ring-[#E8FF47]', 'ring-offset-2', 'ring-offset-[#08080A]')
+      }, 2000)
+    }
+  }
+
   return (
     <div className="pb-5 mb-1 border-b border-white/[0.06]">
       {/* Question Title */}
@@ -45,8 +63,15 @@ export default function QuestionHeader({
         {title}
       </h1>
 
-      {/* Bottom row: meta + tags */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      {/* Mobile Voting Controls */}
+      {questionId && upvotes !== undefined && (
+        <div className="mb-4">
+          <MobileVoteButtons questionId={questionId} initialUpvotes={upvotes} />
+        </div>
+      )}
+
+      {/* Bottom row: meta + tags + answer button */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 
         {/* User Meta */}
         <div className="flex items-center gap-3 text-[11px] font-label">
@@ -80,7 +105,7 @@ export default function QuestionHeader({
         </div>
 
         {/* Tags */}
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap items-center">
           {tags && tags.length > 0 ? (
             tags.map((tag) => (
               <span 
@@ -93,6 +118,17 @@ export default function QuestionHeader({
           ) : (
             <span className="text-[10px] text-white/40 italic">No tags assigned</span>
           )}
+          
+          {/* Answer Icon Button */}
+          <button
+            onClick={scrollToAnswerForm}
+            className="p-2 text-white/40 hover:text-[#E8FF47] transition-colors rounded-lg hover:bg-[#E8FF47]/5"
+            title="Answer question"
+          >
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>
+              edit
+            </span>
+          </button>
         </div>
 
       </div>

@@ -76,7 +76,7 @@ export default function AnswerForm({ questionId, userId, onAnswerSubmitted }: An
           disabled={isSubmitting || isEmpty}
           className={`flex items-center gap-2 px-5 py-2 text-[11px] font-label font-semibold uppercase tracking-widest transition-all duration-150 rounded-sm ${
             isEmpty || isSubmitting
-              ? 'text-white/20 border border-white/8 cursor-not-allowed'
+              ? 'text-[#E8FF47]/30 border border-[#E8FF47]/20 cursor-not-allowed'
               : 'bg-lime-accent text-background hover:bg-lime-accent/90'
           }`}
         >

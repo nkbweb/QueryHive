@@ -109,7 +109,7 @@ export default function AskQuestionPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-surface via-surface to-surface-container/30">
+    <main className="min-h-screen bg-[#08080A]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         
         {/* Header */}
@@ -126,7 +126,7 @@ export default function AskQuestionPage() {
         </div>
 
         {/* Form Card */}
-        <div className="bg-surface-container/50 backdrop-blur-sm rounded-3xl border border-white/10 p-6 sm:p-8 space-y-6">
+        <div className="bg-[#131315] rounded-3xl border border-[#1C1B1E] p-6 sm:p-8 space-y-6">
 
           {/* Title Input */}
           <div className="space-y-2">
@@ -139,10 +139,10 @@ export default function AskQuestionPage() {
                 value={formData.title}
                 onChange={(e) => { setFormData({ ...formData, title: e.target.value }); if (errors.title) setErrors({ ...errors, title: '' }) }}
                 className={`
-                  w-full px-4 py-3.5 bg-surface/50 border-2 rounded-xl text-white placeholder:text-white/40
-                  focus:outline-none focus:border-lime-accent/50 focus:bg-surface/80
+                  w-full px-4 py-3.5 bg-[#08080A] border-2 rounded-xl text-white placeholder:text-white/40
+                  focus:outline-none focus:border-lime-accent/50 focus:bg-[#0A0A0C]
                   transition-all duration-300
-                  ${errors.title ? 'border-red-500/50' : 'border-white/10'}
+                  ${errors.title ? 'border-red-500/50' : 'border-[#1C1B1E]'}
                 `}
                 placeholder=""
                 maxLength={300}
@@ -176,11 +176,11 @@ export default function AskQuestionPage() {
               value={formData.content}
               onChange={(e) => { setFormData({ ...formData, content: e.target.value }); if (errors.content) setErrors({ ...errors, content: '' }) }}
               className={`
-                w-full px-4 py-3.5 bg-surface/50 border-2 rounded-xl text-white placeholder:text-white/40
-                focus:outline-none focus:border-lime-accent/50 focus:bg-surface/80
+                w-full px-4 py-3.5 bg-[#08080A] border-2 rounded-xl text-white placeholder:text-white/40
+                focus:outline-none focus:border-lime-accent/50 focus:bg-[#0A0A0C]
                 resize-none min-h-[180px] leading-relaxed
                 transition-all duration-300
-                ${errors.content ? 'border-red-500/50' : 'border-white/10'}
+                ${errors.content ? 'border-red-500/50' : 'border-[#1C1B1E]'}
               `}
               placeholder=""
               rows={8}
@@ -198,7 +198,7 @@ export default function AskQuestionPage() {
             <label className="block text-sm font-semibold text-white">
               Tags
             </label>
-            <div className="bg-surface/50 border-2 border-white/10 rounded-xl p-4 focus-within:border-lime-accent/50 transition-all duration-300">
+            <div className="bg-[#08080A] border-2 border-[#1C1B1E] rounded-xl p-4 focus-within:border-lime-accent/50 transition-all duration-300">
               {selectedTags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-3">
                   {selectedTags.map(tagId => {

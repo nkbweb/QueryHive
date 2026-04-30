@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useCommentVote, useCommentReply } from '@/hooks/useComments'
+import { createClient } from '@/lib/supabase/client'
+import LoginPopup from '@/components/auth/LoginPopup'
 
 interface CommentProps {
   comment: {
@@ -42,10 +44,22 @@ export default function Comment({
   const { isVoting, currentUserVote, upvotes, downvotes, handleVote } = useCommentVote(comment.id, comment.upvotes, comment.downvotes)
   const { isSubmitting: isReplySubmitting, handleSubmit: handleReplySubmit } = useCommentReply(answerId, comment.id)
   const [replyContent, setReplyContent] = useState('')
+  const [showLoginPopup, setShowLoginPopup] = useState(false)
+  const [loginAction, setLoginAction] = useState('')
 
   const childComments = allComments.filter(c => c.parentId === comment.id)
 
+  const checkAuthAndShowPopup = (action: string) => {
+    if (!currentUserId) {
+      setLoginAction(action)
+      setShowLoginPopup(true)
+      return false
+    }
+    return true
+  }
+
   const onReplySubmit = async () => {
+    if (!checkAuthAndShowPopup('reply')) return
     const newComment = await handleReplySubmit(replyContent)
     if (newComment) {
       setReplyContent('')
@@ -93,7 +107,10 @@ export default function Comment({
           <div className="flex items-center gap-4">
             {/* Reply */}
             <button
-              onClick={() => onReply(comment.id)}
+              onClick={() => {
+                if (!checkAuthAndShowPopup('reply')) return
+                onReply(comment.id)
+              }}
               className="text-[11px] text-white/30 hover:text-white/60 font-label transition-colors"
             >
               Reply
@@ -102,7 +119,10 @@ export default function Comment({
             {/* Votes */}
             <div className="flex items-center gap-2">
               <button
-                onClick={() => handleVote(1)}
+                onClick={() => {
+                  if (!checkAuthAndShowPopup('vote')) return
+                  handleVote(1)
+                }}
                 disabled={isVoting}
                 className={`flex items-center gap-0.5 transition-colors duration-150 ${
                   currentUserVote === 1 ? 'text-lime-accent' : 'text-white/25 hover:text-white/60'
@@ -113,7 +133,10 @@ export default function Comment({
               </button>
 
               <button
-                onClick={() => handleVote(-1)}
+                onClick={() => {
+                  if (!checkAuthAndShowPopup('vote')) return
+                  handleVote(-1)
+                }}
                 disabled={isVoting}
                 className={`flex items-center gap-0.5 transition-colors duration-150 ${
                   currentUserVote === -1 ? 'text-error' : 'text-white/25 hover:text-white/60'
@@ -161,6 +184,13 @@ export default function Comment({
               </div>
             </div>
           )}
+
+          {/* Login Popup */}
+          <LoginPopup 
+            isOpen={showLoginPopup} 
+            onClose={() => setShowLoginPopup(false)}
+            action={loginAction}
+          />
 
           {/* Nested Comments */}
           {childComments.length > 0 && (

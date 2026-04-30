@@ -1,7 +1,9 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useNavigationWithLoading } from '@/hooks/useNavigationWithLoading'
+import { createClient } from '@/lib/supabase/client'
 
 type Question = {
   id: string
@@ -15,11 +17,44 @@ type Question = {
 
 export default function QuestionFeed({ questions = [] }: { questions: Question[] }) {
   const { navigate } = useNavigationWithLoading()
+  const [activeTab, setActiveTab] = useState<'for-you' | 'newest' | 'trending' | 'unanswered'>('for-you')
+  const [filteredQuestions, setFilteredQuestions] = useState(questions)
 
   const handleQuestionClick = (e: React.MouseEvent, questionId: string) => {
     e.preventDefault()
     navigate(`/questions/${questionId}`)
   }
+
+  const fetchFilteredQuestions = useCallback(async (tab: typeof activeTab) => {
+    try {
+      let endpoint = '/api/questions'
+      
+      switch (tab) {
+        case 'newest':
+          endpoint = '/api/questions?sort=newest'
+          break
+        case 'trending':
+          endpoint = '/api/questions?sort=trending'
+          break
+        case 'unanswered':
+          endpoint = '/api/questions?sort=unanswered'
+          break
+        default:
+          endpoint = '/api/questions'
+      }
+
+      const response = await fetch(endpoint)
+      const data = await response.json()
+      setFilteredQuestions(data.questions || [])
+    } catch (error) {
+      console.error('Error fetching filtered questions:', error)
+      setFilteredQuestions(questions)
+    }
+  }, [questions])
+
+  useEffect(() => {
+    fetchFilteredQuestions(activeTab)
+  }, [activeTab, fetchFilteredQuestions])
 
   return (
     <main className="flex-1 flex flex-col overflow-hidden bg-[#08080A]">
@@ -31,17 +66,53 @@ export default function QuestionFeed({ questions = [] }: { questions: Question[]
           <div className="flex items-center gap-1.5 px-2 py-0.5 bg-primary-container/10 border border-primary-container/20">
             <span className="w-1.5 h-1.5 bg-primary-container rounded-full animate-pulse"></span>
             <span className="text-[10px] sm:text-[11px] font-label text-primary-container">
-              {questions.length} <span className="hidden sm:inline">NEW</span>
+              {filteredQuestions.length} <span className="hidden sm:inline">NEW</span>
             </span>
           </div>
         </div>
 
-        {/* Filters (static for now) */}
+        {/* Filters */}
         <div className="flex gap-2 sm:gap-6 border-b border-[#1C1B1E] overflow-x-auto no-scrollbar">
-          <button className="pb-2 border-b-2 border-primary-container text-[10px] sm:text-[13px] text-white font-medium px-2 sm:px-3">For You</button>
-          <button className="pb-2 border-b-2 border-transparent text-[10px] sm:text-[13px] text-white/50 hover:text-white px-2 sm:px-3">Newest</button>
-          <button className="pb-2 border-b-2 border-transparent text-[10px] sm:text-[13px] text-white/50 hover:text-white px-2 sm:px-3">Trending</button>
-          <button className="pb-2 border-b-2 border-transparent text-[10px] sm:text-[13px] text-white/50 hover:text-white px-2 sm:px-3">Unanswered</button>
+          <button 
+            onClick={() => setActiveTab('for-you')}
+            className={`pb-2 border-b-2 text-[10px] sm:text-[13px] font-medium px-2 sm:px-3 transition-colors ${
+              activeTab === 'for-you' 
+                ? 'border-primary-container text-white' 
+                : 'border-transparent text-white/50 hover:text-white'
+            }`}
+          >
+            For You
+          </button>
+          <button 
+            onClick={() => setActiveTab('newest')}
+            className={`pb-2 border-b-2 text-[10px] sm:text-[13px] font-medium px-2 sm:px-3 transition-colors ${
+              activeTab === 'newest' 
+                ? 'border-primary-container text-white' 
+                : 'border-transparent text-white/50 hover:text-white'
+            }`}
+          >
+            Newest
+          </button>
+          <button 
+            onClick={() => setActiveTab('trending')}
+            className={`pb-2 border-b-2 text-[10px] sm:text-[13px] font-medium px-2 sm:px-3 transition-colors ${
+              activeTab === 'trending' 
+                ? 'border-primary-container text-white' 
+                : 'border-transparent text-white/50 hover:text-white'
+            }`}
+          >
+            Trending
+          </button>
+          <button 
+            onClick={() => setActiveTab('unanswered')}
+            className={`pb-2 border-b-2 text-[10px] sm:text-[13px] font-medium px-2 sm:px-3 transition-colors ${
+              activeTab === 'unanswered' 
+                ? 'border-primary-container text-white' 
+                : 'border-transparent text-white/50 hover:text-white'
+            }`}
+          >
+            Unanswered
+          </button>
         </div>
       </header>
 
@@ -49,7 +120,7 @@ export default function QuestionFeed({ questions = [] }: { questions: Question[]
       <div className="flex-1 overflow-y-auto no-scrollbar px-3 sm:px-0">
         <div className="flex flex-col gap-3 sm:gap-4">
 
-          {questions.map((q) => (
+          {filteredQuestions.map((q) => (
             <Link
               key={q.id}
               href={`/questions/${q.id}`}

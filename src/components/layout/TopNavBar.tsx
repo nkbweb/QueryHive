@@ -9,12 +9,14 @@ import { useNavigationWithLoading } from '@/hooks/useNavigationWithLoading'
 import { AuthUser } from '@/types'
 import Image from 'next/image'
 import Link from 'next/link'
+import LoginPopup from '@/components/auth/LoginPopup'
 
 export default function TopNavBar() {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string>('')
   const [username, setUsername] = useState<string>('')
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showLoginPopup, setShowLoginPopup] = useState(false)
   const { logout } = useAuth()
   const { unreadCount } = useNotifications()
   const { navigate } = useNavigationWithLoading()
@@ -73,6 +75,14 @@ export default function TopNavBar() {
     }
   }, [showUserMenu])
 
+  const checkAuthAndShowPopup = () => {
+    if (!user) {
+      setShowLoginPopup(true)
+      return false
+    }
+    return true
+  }
+
   return (
     <nav className="fixed top-0 w-full h-[56px] border-b border-surface-container-low bg-surface flex justify-between items-center px-3 z-50 backdrop-blur-sm overflow-visible">
       <div className="flex items-center gap-8">
@@ -83,8 +93,11 @@ export default function TopNavBar() {
       </div>
       <div className="flex items-center gap-5 overflow-visible">
         <button 
-          onClick={() => navigate('/notifications')}
-          className="relative cursor-pointer group flex items-center justify-center w-10 h-10 rounded-lg bg-surface-container-high/50 border border-transparent hover:border-lime-accent/30 hover:bg-surface-container-high transition-all duration-200"
+          onClick={() => {
+            if (!checkAuthAndShowPopup()) return
+            navigate('/notifications')
+          }}
+          className="relative cursor-pointer group flex items-center justify-center w-10 h-10 rounded-lg hover:border-lime-accent/30 transition-all duration-200"
         >
           <span className="material-symbols-outlined text-white/70 !text-[24px] group-hover:text-white transition-colors leading-none">notifications</span>
           {unreadCount > 0 && (
@@ -158,6 +171,11 @@ export default function TopNavBar() {
           <span className="material-symbols-outlined !text-[18px]">add_circle</span>
           <span>Ask</span>
         </button>
+        <LoginPopup 
+          isOpen={showLoginPopup} 
+          onClose={() => setShowLoginPopup(false)}
+          action="view notifications"
+        />
       </div>
     </nav>
   )

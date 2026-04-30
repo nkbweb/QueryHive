@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import ActivityFeed from '@/components/follow/ActivityFeed'
 import UserSearch from '@/components/search/UserSearch'
+import FollowingList from '@/components/follow/FollowingList'
 import { Users, TrendingUp, Sparkles } from 'lucide-react'
 
 export default function FollowingPage() {
@@ -169,6 +170,9 @@ export default function FollowingPage() {
                 className="mb-4"
               />
             </div>
+            
+            {/* Following List */}
+            <FollowingList currentUserId={currentUserId} />
             
             {/* Tips - Hidden on mobile */}
             <div className="hidden lg:block bg-gradient-to-br from-lime-accent/10 to-lime-accent/5 border border-lime-accent/20 rounded-xl p-6">

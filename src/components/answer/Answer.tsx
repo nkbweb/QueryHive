@@ -11,6 +11,7 @@ import Comment from './Comment'
 import CommentForm from './CommentForm'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import FollowButton from '@/components/follow/FollowButton'
+import LoginPopup from '@/components/auth/LoginPopup'
 
 interface AnswerProps {
   answer: {
@@ -46,6 +47,8 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
   const [showAllComments, setShowAllComments] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | undefined>()
   const [isLoadingComments, setIsLoadingComments] = useState(false)
+  const [showLoginPopup, setShowLoginPopup] = useState(false)
+  const [loginAction, setLoginAction] = useState('')
 
   useEffect(() => {
     const fetchUserVote = async () => {
@@ -75,12 +78,28 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
   }, [answer.id])
 
   useEffect(() => {
+    // Fetch comments initially to get count
+    fetchComments()
+  }, [fetchComments])
+
+  useEffect(() => {
     if (showComments) {
+      // Refetch when showing comments to ensure latest data
       fetchComments()
     }
   }, [showComments, fetchComments])
 
+  const checkAuthAndShowPopup = (action: string) => {
+    if (!currentUserId) {
+      setLoginAction(action)
+      setShowLoginPopup(true)
+      return false
+    }
+    return true
+  }
+
   const handleVote = async (voteValue: 1 | -1 | 0) => {
+    if (!checkAuthAndShowPopup('vote')) return
     if (isVoting) return
     setIsVoting(true)
     const supabase = createClient()
@@ -140,10 +159,10 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
       <Markdown content={answer.content} className="mb-5 text-white/80 text-sm leading-relaxed" />
 
       {/* Footer */}
-      <div className="flex items-center justify-between">
+      <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
 
-        {/* User */}
-        <div className="flex items-center gap-3">
+        {/* User Section */}
+        <div className="flex items-start gap-3">
           <div style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
             <Image
               src={answer.user.avatarUrl || '/default-avatar.png'}
@@ -153,14 +172,31 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
               style={{ width: 32, height: 32, objectFit: 'cover' }}
             />
           </div>
-          <div className="flex-1">
-            <Link
-                href={`/profile/${answer.user.username}`}
-                className="text-[13px] text-white font-semibold hover:text-[#E8FF47] transition-colors"
-              >
-                {answer.user.fullName || answer.user.username}
-              </Link>
-            <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <Link
+                  href={`/profile/${answer.user.username}`}
+                  className="text-[13px] text-white font-semibold hover:text-[#E8FF47] transition-colors truncate"
+                >
+                  {answer.user.fullName || answer.user.username}
+                </Link>
+              {/* Follow Button - Mobile Only */}
+              {currentUserId !== answer.user.id && (
+                <div className="sm:hidden flex-shrink-0">
+                  <FollowButton
+                    userId={answer.user.id}
+                    username={answer.user.username}
+                    currentUserId={currentUserId}
+                    size="sm"
+                    onLoginRequired={() => {
+                      setLoginAction('follow')
+                      setShowLoginPopup(true)
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
               <Link
                 href={`/profile/${answer.user.username}`}
                 className="text-[12px] text-white/40 font-medium hover:text-[#E8FF47] transition-colors"
@@ -177,18 +213,10 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
               <span className="text-[11px] text-white/30 font-label">{answer.createdAt}</span>
             </div>
           </div>
-          {currentUserId && currentUserId !== answer.user.id && (
-            <FollowButton
-              userId={answer.user.id}
-              username={answer.user.username}
-              currentUserId={currentUserId}
-              size="sm"
-            />
-          )}
         </div>
 
-        {/* Votes and Comments */}
-        <div className="flex items-center gap-3">
+        {/* Votes and Comments - Properly aligned */}
+        <div className="flex items-center gap-4 sm:gap-3">
           <button
             onClick={() => handleVote(1)}
             disabled={isVoting}
@@ -196,7 +224,7 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
               currentUserVote === 1 ? 'text-lime-accent' : 'text-white/25 hover:text-white/60'
             }`}
           >
-            <ChevronUp className="w-8 h-8" />
+            <ChevronUp className="w-6 h-6 sm:w-8 sm:h-8" />
             <span className="text-[11px] font-mono tabular-nums">{upvotes}</span>
           </button>
 
@@ -207,11 +235,10 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
               currentUserVote === -1 ? 'text-error' : 'text-white/25 hover:text-white/60'
             }`}
           >
-            <ChevronDown className="w-8 h-8" />
+            <ChevronDown className="w-6 h-6 sm:w-8 sm:h-8" />
             <span className="text-[11px] font-mono tabular-nums">{downvotes}</span>
           </button>
 
-          {/* Comment Icon Button */}
           <button
             onClick={() => setShowComments(!showComments)}
             className={`flex items-center gap-1 transition-colors duration-150 ${
@@ -219,41 +246,64 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
             }`}
             title={`${showComments ? 'Hide' : 'Show'} comments`}
           >
-            <MessageCircle className={`w-6 h-6 ${showComments ? 'fill-current' : ''}`} />
+            <MessageCircle className={`w-5 h-5 sm:w-6 sm:h-6 ${showComments ? 'fill-current' : ''}`} />
             <span className="text-[11px] font-mono tabular-nums">{comments.length}</span>
           </button>
+
+          {/* Follow Button - Desktop Only */}
+          {currentUserId !== answer.user.id && (
+            <div className="hidden sm:block ml-auto">
+              <FollowButton
+                userId={answer.user.id}
+                username={answer.user.username}
+                currentUserId={currentUserId}
+                size="sm"
+                onLoginRequired={() => {
+                  setLoginAction('follow')
+                  setShowLoginPopup(true)
+                }}
+              />
+            </div>
+          )}
         </div>
 
       </div>
 
+      {/* Login Popup */}
+      <LoginPopup 
+        isOpen={showLoginPopup} 
+        onClose={() => setShowLoginPopup(false)}
+        action={loginAction}
+      />
+
       {/* Comments Section */}
       {showComments && (
-      <div className="mt-4 pt-4 border-t border-white/[0.06]">
-        <div className="mt-4">
-          {isLoadingComments && (
-            <div className="flex items-center justify-center py-8">
-              <LoadingSpinner size="md" />
-            </div>
-          )}
-          {!isLoadingComments && (
-            <>
-              {/* Top-level Comment Form */}
-              <CommentForm
-                answerId={answer.id}
-                onCommentAdded={(newComment) => {
-                  setComments([...comments, newComment])
-                }}
-              />
+        <div className="mt-4 pt-4 border-t border-white/[0.06]">
+          <div className="mt-4">
+            {isLoadingComments && (
+              <div className="flex items-center justify-center py-8">
+                <LoadingSpinner size="md" />
+              </div>
+            )}
+            {!isLoadingComments && (
+              <>
+                {/* Top-level Comment Form */}
+                <CommentForm
+                  answerId={answer.id}
+                  onCommentAdded={(newComment) => {
+                    setComments([...comments, newComment])
+                  }}
+                />
 
-              {/* Comments List */}
-              {comments.length > 0 && (
-                <div className="mt-4">
-                  {comments
-                    .filter(c => !c.parentId)
-                    .slice(0, showAllComments ? undefined : 3)
-                    .map(comment => (
-                      <Comment
-                        key={comment.id}
+                {/* Comments List */}
+                {comments.length > 0 && (
+                  <div className="mt-4">
+                    {comments
+                      .filter(c => !c.parentId)
+                      .slice(0, showAllComments ? undefined : 3)
+                      .map(comment => (
+                        <Comment
+                          key={comment.id}
                         comment={comment}
                         allComments={comments}
                         setAllComments={setComments}
