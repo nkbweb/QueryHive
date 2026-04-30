@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Notification } from '@/types/notifications'
 
@@ -10,6 +10,10 @@ interface NotificationsListProps {
 
 export default function NotificationsList({ notifications }: NotificationsListProps) {
   const [localNotifications, setLocalNotifications] = useState(notifications)
+
+  useEffect(() => {
+    setLocalNotifications(notifications)
+  }, [notifications])
 
   const getIcon = () => {
     switch (notifications[0]?.type) {

@@ -270,7 +270,7 @@ export default function ExplorePage() {
                         {q.tags.map((tag) => (
                           <span
                             key={tag.id}
-                            className="px-2.5 py-1 bg-surface-container text-xs font-label text-white/60 border border-white/5"
+                            className="px-2.5 py-1 bg-surface-container text-xs font-label text-white border border-outline rounded"
                           >
                             {tag.name}
                           </span>

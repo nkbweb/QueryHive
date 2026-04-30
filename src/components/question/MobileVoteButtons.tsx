@@ -3,26 +3,22 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getUserVote, updateVote } from '@/lib/queries/votes'
-import { ChevronUp, ChevronDown, Bookmark } from 'lucide-react'
 import LoginPopup from '@/components/auth/LoginPopup'
 
-interface VoteColumnProps {
+interface MobileVoteButtonsProps {
   questionId: string
   initialUpvotes: number
 }
 
-export default function VoteColumn({ 
-  questionId, 
-  initialUpvotes
-}: VoteColumnProps) {
+export default function MobileVoteButtons({ questionId, initialUpvotes }: MobileVoteButtonsProps) {
   const [upvotes, setUpvotes] = useState(initialUpvotes)
   const [currentUserVote, setCurrentUserVote] = useState(0)
   const [isVoting, setIsVoting] = useState(false)
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [isBookmarking, setIsBookmarking] = useState(false)
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [showLoginPopup, setShowLoginPopup] = useState(false)
-  const [loginAction, setLoginAction] = useState('')
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [loginAction, setLoginAction] = useState<string>('')
 
   useEffect(() => {
     const fetchUserData = async (retryCount = 0) => {
@@ -36,21 +32,27 @@ export default function VoteColumn({
           return
         }
 
-        if (!user) return
+        if (error) {
+          console.error('Error getting user:', error)
+          return
+        }
 
-        setCurrentUserId(user.id)
+        setCurrentUserId(user?.id || null)
+        
+        if (user) {
+          // Fetch user's vote and bookmark status
+          const userVote = await getUserVote(user.id, 'question', questionId)
+          setCurrentUserVote(userVote)
 
-        const userVote = await getUserVote(user.id, 'question', questionId)
-        setCurrentUserVote(userVote)
+          const { data, error: bookmarkError } = await supabase
+            .from('bookmarks')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('question_id', questionId)
+            .maybeSingle()
 
-        const { data, error: bookmarkError } = await supabase
-          .from('bookmarks')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('question_id', questionId)
-          .maybeSingle()
-
-        setIsBookmarked(!bookmarkError && !!data)
+          setIsBookmarked(!bookmarkError && !!data)
+        }
       } catch (error) {
         console.error('Error fetching user data:', error)
       }
@@ -75,10 +77,9 @@ export default function VoteColumn({
     const supabase = createClient()
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!currentUserId) return
 
-      const success = await updateVote(user.id, 'question', questionId, voteValue)
+      const success = await updateVote(currentUserId, 'question', questionId, voteValue)
       
       if (success) {
         let newUpvotes = upvotes
@@ -106,21 +107,31 @@ export default function VoteColumn({
     const supabase = createClient()
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!currentUserId) return
 
       if (isBookmarked) {
+        // Remove bookmark
         const { error } = await supabase
           .from('bookmarks')
           .delete()
-          .eq('user_id', user.id)
+          .eq('user_id', currentUserId)
           .eq('question_id', questionId)
-        if (!error) setIsBookmarked(false)
+
+        if (!error) {
+          setIsBookmarked(false)
+        }
       } else {
+        // Add bookmark
         const { error } = await supabase
           .from('bookmarks')
-          .insert({ user_id: user.id, question_id: questionId })
-        if (!error) setIsBookmarked(true)
+          .insert({
+            user_id: currentUserId,
+            question_id: questionId
+          })
+
+        if (!error) {
+          setIsBookmarked(true)
+        }
       }
     } catch (error) {
       console.error('Bookmark error:', error)
@@ -130,25 +141,42 @@ export default function VoteColumn({
   }
 
   return (
-    <aside className="w-[52px] flex flex-col items-center sticky top-[48px] h-fit gap-0.5">
+    <div className="flex items-center gap-2 lg:hidden">
+      {/* Bookmark */}
+      <button
+        onClick={handleBookmark}
+        disabled={isBookmarking}
+        className={`p-2 rounded-lg transition-all duration-150 ${
+          isBookmarked ? 'text-white/70 bg-white/10' : 'text-white/40 hover:text-white/60 hover:bg-white/5'
+        } ${isBookmarking ? 'opacity-40 cursor-wait' : ''}`}
+        title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
+      >
+        <span className="material-symbols-outlined text-[20px] leading-none">
+          {isBookmarked ? 'bookmark' : 'bookmark_border'}
+        </span>
+      </button>
 
       {/* Upvote */}
       <button
         onClick={() => handleVote(1)}
         disabled={isVoting}
-        className={`group p-1 transition-all duration-150 ${
-          currentUserVote === 1 ? 'text-lime-accent' : 'text-white/25 hover:text-white/60'
+        className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-150 ${
+          currentUserVote === 1 
+            ? 'text-[#E8FF47] bg-[#E8FF47]/10' 
+            : 'text-white/40 hover:text-white/60 hover:bg-white/5'
         } ${isVoting ? 'opacity-40 cursor-wait' : ''}`}
         title="Upvote"
       >
-        <ChevronUp className="w-10 h-10 transition-transform group-hover:scale-110 block" />
+        <span className="material-symbols-outlined text-[20px] leading-none">
+          {currentUserVote === 1 ? 'arrow_upward' : 'arrow_upward_alt'}
+        </span>
       </button>
 
-      {/* Count */}
-      <span className={`font-mono font-semibold text-base leading-none tabular-nums select-none transition-colors duration-150 ${
-        currentUserVote === 1 ? 'text-lime-accent' :
-        currentUserVote === -1 ? 'text-error' :
-        'text-white/50'
+      {/* Vote Count */}
+      <span className={`font-mono font-semibold text-sm leading-none tabular-nums select-none transition-colors duration-150 ${
+        currentUserVote === 1 ? 'text-[#E8FF47]' :
+        currentUserVote === -1 ? 'text-red-400' :
+        'text-white/60'
       }`}>
         {upvotes}
       </span>
@@ -157,36 +185,24 @@ export default function VoteColumn({
       <button
         onClick={() => handleVote(-1)}
         disabled={isVoting}
-        className={`group p-1 transition-all duration-150 ${
-          currentUserVote === -1 ? 'text-error' : 'text-white/25 hover:text-white/60'
+        className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-150 ${
+          currentUserVote === -1 
+            ? 'text-red-400 bg-red-400/10' 
+            : 'text-white/40 hover:text-white/60 hover:bg-white/5'
         } ${isVoting ? 'opacity-40 cursor-wait' : ''}`}
         title="Downvote"
       >
-        <ChevronDown className="w-10 h-10 transition-transform group-hover:scale-110 block" />
+        <span className="material-symbols-outlined text-[20px] leading-none">
+          {currentUserVote === -1 ? 'arrow_downward' : 'arrow_downward_alt'}
+        </span>
       </button>
-
-      {/* Divider */}
-      <div className="w-4 h-px bg-white/[0.08] my-3" />
-
-      {/* Bookmark */}
-      <button
-        onClick={handleBookmark}
-        disabled={isBookmarking}
-        className={`group p-1 transition-all duration-150 ${
-          isBookmarked ? 'text-white/70' : 'text-white/25 hover:text-white/60'
-        } ${isBookmarking ? 'opacity-40 cursor-wait' : ''}`}
-        title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
-      >
-        <Bookmark className={`w-6 h-6 transition-transform group-hover:scale-110 block ${isBookmarked ? 'fill-current' : ''}`} />
-      </button>
-
+      
       {/* Login Popup */}
       <LoginPopup 
         isOpen={showLoginPopup} 
         onClose={() => setShowLoginPopup(false)}
         action={loginAction}
       />
-
-    </aside>
+    </div>
   )
 }

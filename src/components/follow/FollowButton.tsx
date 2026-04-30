@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import LoginPopup from '@/components/auth/LoginPopup'
 
 interface FollowButtonProps {
   userId: string
@@ -9,6 +10,7 @@ interface FollowButtonProps {
   className?: string
   size?: 'sm' | 'md' | 'lg'
   currentUserId?: string
+  onLoginRequired?: () => void
 }
 
 export default function FollowButton({ 
@@ -16,7 +18,8 @@ export default function FollowButton({
   username, 
   className = '', 
   size = 'md',
-  currentUserId 
+  currentUserId,
+  onLoginRequired
 }: FollowButtonProps) {
   const [isFollowing, setIsFollowing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -47,7 +50,11 @@ export default function FollowButton({
   }, [userId, currentUserId])
 
   const handleFollow = async () => {
-    if (!currentUserId || isLoading || isChecking) return
+    if (!currentUserId) {
+      onLoginRequired?.()
+      return
+    }
+    if (isLoading || isChecking) return
 
     setIsLoading(true)
     try {
@@ -94,9 +101,25 @@ export default function FollowButton({
     }
   }
 
-  // Don't show follow button for own profile or when not logged in
-  if (!currentUserId || currentUserId === userId) {
+  // Don't show follow button for own profile
+  if (currentUserId === userId) {
     return null
+  }
+
+  // Show login button when not logged in
+  if (!currentUserId) {
+    return (
+      <button
+        onClick={onLoginRequired}
+        className={`${
+          size === 'sm' ? 'px-3 py-1 text-xs' :
+          size === 'md' ? 'px-4 py-2 text-sm' :
+          'px-6 py-3 text-base'
+        } font-medium rounded-lg transition-all duration-200 bg-white/10 border border-white/20 text-white/80 hover:bg-white/20 hover:border-white/30 hover:text-white ${className}`}
+      >
+        Follow
+      </button>
+    )
   }
 
   const sizeClasses = {

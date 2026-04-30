@@ -49,21 +49,25 @@ export default function QuestionPageClient({ questionId, initialQuestion }: Ques
   }
 
   return (
-    <div className="pt-[48px] max-w-[1400px] flex min-h-[calc(100vh-48px)]">
-      {/* Vote Column (Left Gutter 60px) */}
-      <VoteColumn
-        questionId={question.id}
-        initialUpvotes={question.upvotes}
-      />
+    <div className="pt-[48px] w-full max-w-[1400px] mx-auto flex min-h-[calc(100vh-48px)]">
+      {/* Vote Column (Left Gutter 60px) - Hidden on mobile */}
+      <div className="hidden lg:block">
+        <VoteColumn
+          questionId={question.id}
+          initialUpvotes={question.upvotes}
+        />
+      </div>
 
       {/* Main Content */}
-      <main className="flex-1 pb-20 px-8">
+      <main className="flex-1 pb-20 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
         <QuestionHeader
           title={question.title}
           user={question.user}
           createdAt={question.createdAt}
           views={question.views}
           tags={question.tags}
+          questionId={question.id}
+          upvotes={question.upvotes}
         />
         
         <QuestionBody
