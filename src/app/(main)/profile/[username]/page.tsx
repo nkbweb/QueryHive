@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { getProfileByUsername, getUserQuestions, getUserAnswers, getUserComments } from '@/lib/queries/profiles'
+import { getProfileByUsername, getUserQuestions, getUserAnswers, getUserComments, getUserSkills } from '@/lib/queries/profiles'
 import ProfileView from '@/components/profile/ProfileView'
 
 interface ProfilePageProps {
@@ -22,10 +22,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const isOwnProfile = user?.id === profile.id
 
   // Fetch user activity
-  const [questions, answers, comments] = await Promise.all([
+  const [questions, answers, comments, skills] = await Promise.all([
     getUserQuestions(profile.id),
     getUserAnswers(profile.id),
-    getUserComments(profile.id)
+    getUserComments(profile.id),
+    getUserSkills(profile.id)
   ])
 
   return (
@@ -36,6 +37,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       questions={questions}
       answers={answers}
       comments={comments}
+      skills={skills}
     />
   )
 }

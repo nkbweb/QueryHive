@@ -161,57 +161,79 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
       {/* Footer */}
       <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
 
-        {/* User Section */}
+       {/* User Section */}
         <div className="flex items-start gap-3">
-          <div style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+
+          {/* Avatar */}
+          <Link href={`/profile/${answer.user.username}`} className="w-9 h-9 rounded-[9px] overflow-hidden border border-white/10 bg-[#1a1a1f] flex-shrink-0">
             <Image
               src={answer.user.avatarUrl || '/default-avatar.png'}
               alt={answer.user.username}
-              width={32}
-              height={32}
-              style={{ width: 32, height: 32, objectFit: 'cover' }}
+              width={36}
+              height={36}
+              className="w-full h-full object-cover"
             />
-          </div>
+          </Link>
+
+          {/* User Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2 mb-1">
-              <Link
+
+            {/* Name + Follow */}
+            <div className="flex items-center justify-between gap-2">
+
+              <div className="min-w-0">
+
+                {/* Name */}
+                <Link
                   href={`/profile/${answer.user.username}`}
-                  className="text-[13px] text-white font-semibold hover:text-[#E8FF47] transition-colors truncate"
+                  className="block text-[14px] font-semibold text-white hover:text-[#E8FF47] transition-colors truncate leading-tight"
                 >
                   {answer.user.fullName || answer.user.username}
                 </Link>
-              {/* Follow Button - Mobile Only */}
-              {currentUserId !== answer.user.id && (
-                <div className="sm:hidden flex-shrink-0">
-                  <FollowButton
-                    userId={answer.user.id}
-                    username={answer.user.username}
-                    currentUserId={currentUserId}
-                    size="sm"
-                    onLoginRequired={() => {
-                      setLoginAction('follow')
-                      setShowLoginPopup(true)
-                    }}
-                  />
+
+                {/* Meta Row */}
+                <div className="flex items-center gap-2 -mt-0.5 flex-wrap">
+                  <Link
+                    href={`/profile/${answer.user.username}`}
+                    className="text-[12px] text-white/40 hover:text-[#E8FF47] transition-colors"
+                  >
+                    @{answer.user.username}
+                  </Link>
+
+                  <span className="text-white/20 text-[10px]">•</span>
+
+                  <span className="text-[11px] text-white/30">
+                    {answer.user.reputation >= 1000
+                      ? `${(answer.user.reputation / 1000).toFixed(1)}k`
+                      : answer.user.reputation}
+                  </span>
+
+                  <span className="text-white/20 text-[10px]">•</span>
+
+                  <span className="text-[11px] text-white/30">
+                    {answer.createdAt}
+                  </span>
                 </div>
-              )}
+
+              </div>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-              <Link
-                href={`/profile/${answer.user.username}`}
-                className="text-[12px] text-white/40 font-medium hover:text-[#E8FF47] transition-colors"
-              >
-                @{answer.user.username}
-              </Link>
-              <span className="text-white/20 text-[10px]">·</span>
-              <span className="text-[11px] text-white/30 font-label">
-                {answer.user.reputation >= 1000
-                  ? `${(answer.user.reputation / 1000).toFixed(1)}k`
-                  : answer.user.reputation}
-              </span>
-              <span className="text-white/20 text-[10px]">·</span>
-              <span className="text-[11px] text-white/30 font-label">{answer.createdAt}</span>
-            </div>
+
+            {/* Follow Button - Mobile Only */}
+            {currentUserId !== answer.user.id && (
+              <div className="sm:hidden mt-2">
+                <FollowButton
+                  userId={answer.user.id}
+                  username={answer.user.username}
+                  currentUserId={currentUserId}
+                  size="sm"
+                  onLoginRequired={() => {
+                    setLoginAction('follow')
+                    setShowLoginPopup(true)
+                  }}
+                />
+              </div>
+            )}
+
           </div>
         </div>
 

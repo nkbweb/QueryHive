@@ -73,36 +73,62 @@ export default function QuestionHeader({
       {/* Bottom row: meta + tags + answer button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 
-        {/* User Meta */}
-        <div className="flex items-center gap-3 text-[11px] font-label">
+      {/* User Meta */}
+      <div className="flex items-center gap-3 text-[11px] font-label">
+
+        {/* Avatar */}
+        <Link
+          href={`/profile/${user.username}`}
+          className="w-8 h-8 rounded-[9px] overflow-hidden border border-white/10 bg-[#1a1a1f] flex-shrink-0"
+        >
           <Image
-            src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.username}&background=131315&color=ffffff&size=40&bold=true`}
+            src={
+              user.avatarUrl ||
+              `https://ui-avatars.com/api/?name=${user.username}&background=131315&color=ffffff&size=40&bold=true`
+            }
             alt={user.username}
             width={32}
             height={32}
-            style={{ borderRadius: '50%', width: 32, height: 32, objectFit: 'cover' }}
+            className="w-full h-full object-cover"
           />
-          <div>
+        </Link>
+
+        {/* Text Content */}
+        <div className="min-w-0">
+
+          {/* Name */}
+          <Link
+            href={`/profile/${user.username}`}
+            className="block text-[13px] font-semibold text-white hover:text-[#E8FF47] transition-colors leading-tight"
+          >
+            {user.fullName || user.username}
+          </Link>
+
+          {/* Meta Row */}
+          <div className="flex items-center gap-2 -mt-0.5 flex-wrap">
+
             <Link
               href={`/profile/${user.username}`}
-              className="text-[13px] text-white font-semibold hover:text-[#E8FF47] transition-colors"
+              className="text-[12px] text-white/40 hover:text-[#E8FF47] transition-colors"
             >
-              {user.fullName || user.username}
+              @{user.username}
             </Link>
-            <div className="flex items-center gap-2">
-              <Link
-                href={`/profile/${user.username}`}
-                className="text-[12px] text-white/40 font-medium hover:text-[#E8FF47] transition-colors"
-              >
-                @{user.username}
-              </Link>
-              <span className="text-white/20">·</span>
-              <span className="text-white/40">asked {createdAt}</span>
-              <span className="text-white/20">·</span>
-              <span className="text-white/40">{views >= 1000 ? `${(views / 1000).toFixed(1)}k` : views} views</span>
-            </div>
+
+            <span className="text-white/20">•</span>
+
+            <span className="text-white/40">
+              asked {createdAt}
+            </span>
+
+            <span className="text-white/20">•</span>
+
+            <span className="text-white/40">
+              {views >= 1000 ? `${(views / 1000).toFixed(1)}k` : views} views
+            </span>
+
           </div>
         </div>
+      </div>
 
         {/* Tags */}
         <div className="flex gap-1.5 flex-wrap items-center">
