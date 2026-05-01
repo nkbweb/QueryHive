@@ -33,6 +33,7 @@ export default function AnswersSectionDynamic({ questionId }: AnswersSectionDyna
           profiles (
             id,
             username,
+            full_name,
             avatar_url,
             reputation
           )
@@ -85,6 +86,7 @@ export default function AnswersSectionDynamic({ questionId }: AnswersSectionDyna
           user: {
             id: profile?.id || answer.user_id,
             username: profile?.username || 'Unknown',
+            fullName: profile?.full_name,
             avatarUrl: profile?.avatar_url,
             reputation: profile?.reputation || 0
           }

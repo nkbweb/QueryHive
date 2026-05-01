@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useCommentVote, useCommentReply } from '@/hooks/useComments'
 import { createClient } from '@/lib/supabase/client'
 import LoginPopup from '@/components/auth/LoginPopup'
@@ -72,15 +73,15 @@ export default function Comment({
     <div className={`${comment.depth > 0 ? 'ml-8 mt-3' : 'mt-4'}`}>
       <div className="flex gap-3 items-start">
         {/* Avatar */}
-        <div style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+        <Link href={`/profile/${comment.user.username}`} className="w-8 h-8 rounded-[9px] overflow-hidden border-[2px] border-[#0c0c0e] bg-[#1a1a1f] flex-shrink-0">
           <Image
             src={comment.user.avatarUrl || '/default-avatar.png'}
             alt={comment.user.username}
             width={32}
             height={32}
-            style={{ width: 32, height: 32, objectFit: 'cover' }}
+            className="w-full h-full object-cover"
           />
-        </div>
+        </Link>
 
         {/* Content */}
         <div className="flex-1 min-w-0">

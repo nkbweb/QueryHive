@@ -27,6 +27,19 @@ export async function middleware(req: NextRequest) {
     error,
   } = await supabase.auth.getUser()
 
+  // Update last_active_at for authenticated users
+  if (user && !error) {
+    try {
+      await supabase
+        .from('profiles')
+        .update({ last_active_at: new Date().toISOString() })
+        .eq('id', user.id)
+    } catch (err) {
+      // Silently fail - don't block the request
+      console.error('Error updating last_active_at:', err)
+    }
+  }
+
   const isProtectedRoute =
     req.nextUrl.pathname.startsWith('/ask') ||
     req.nextUrl.pathname.startsWith('/home') ||
