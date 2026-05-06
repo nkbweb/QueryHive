@@ -24,10 +24,12 @@ export default function SignupPage() {
   const [passwordStrength, setPasswordStrength] = useState(0)
 
   const { loading, error, clearError, signup, validateUsername } = useAuth()
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     clearError()
+    setSuccessMessage(null)
     
     const signupData: SignupData = {
       fullName,
@@ -36,7 +38,18 @@ export default function SignupPage() {
       password
     }
     
-    await signup(signupData)
+    try {
+      await signup(signupData)
+      setSuccessMessage('Account created successfully! Redirecting to login...')
+      // Clear success message after 5 seconds
+      const timer = setTimeout(() => {
+        setSuccessMessage(null)
+      }, 5000)
+      return () => clearTimeout(timer)
+    } catch (err) {
+      // If signup throws an error, the auth hook will handle setting the error state
+      console.error('Signup failed:', err)
+    }
   }
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,10 +91,39 @@ export default function SignupPage() {
           <h1 className="text-[28px] font-bold leading-tight tracking-[-0.02em] text-white mb-2">Create account</h1>
           <p className="text-[14px] text-[#71717A] mb-10">Join collective intelligence network.</p>
           
+          {/* Success Display */}
+          {successMessage && !error && (
+            <div className="bg-green-500/10 border border-green-500/30 text-green-400 text-sm p-3 rounded mb-6 flex items-center justify-between">
+              {successMessage}
+              <button 
+                onClick={() => setSuccessMessage(null)}
+                className="text-green-400 hover:text-green-300 ml-4"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
           {/* Error Display */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm p-3 rounded mb-6">
-              {error.message}
+            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm p-3 rounded mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span>{error.message}</span>
+                {error.field && (
+                  <span className="text-xs bg-red-500/20 px-2 py-1 rounded">
+                    {error.field}
+                  </span>
+                )}
+              </div>
+              <button 
+                onClick={() => {
+                  clearError()
+                  setSuccessMessage(null)
+                }}
+                className="text-red-400 hover:text-red-300 ml-4"
+              >
+                ×
+              </button>
             </div>
           )}
           
@@ -92,12 +134,12 @@ export default function SignupPage() {
                 <User className="w-3 h-3" />
                 Full Name
               </label>
-              <input 
+              <input
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="bg-transparent border-0 border-b border-outline-variant py-2 focus:ring-0 focus:border-lime-accent transition-colors placeholder:text-white/20" 
-                placeholder="John Doe" 
+                className="bg-transparent border-0 border-b border-outline-variant py-2 focus:ring-0 focus:border-lime-accent transition-colors placeholder:text-white/20 text-white"
+                placeholder="John Doe"
                 required
               />
             </div>
@@ -106,12 +148,12 @@ export default function SignupPage() {
             <div className="flex flex-col space-y-2 relative">
               <label className="text-[10px] uppercase tracking-widest font-bold text-[#52525B]">Username</label>
               <div className="relative">
-                <input 
+                <input
                   type="text"
                   value={username}
                   onChange={handleUsernameChange}
-                  className="w-full bg-transparent border-0 border-b border-outline-variant py-2 pr-8 focus:ring-0 focus:border-lime-accent transition-colors placeholder:text-white/20" 
-                  placeholder="johndoe_99" 
+                  className="w-full bg-transparent border-0 border-b border-outline-variant py-2 pr-8 focus:ring-0 focus:border-lime-accent transition-colors placeholder:text-white/20 text-white"
+                  placeholder="johndoe_99"
                   required
                 />
                 {usernameAvailable && username.length > 3 && (
@@ -128,12 +170,12 @@ export default function SignupPage() {
                 <Mail className="w-3 h-3" />
                 Email
               </label>
-              <input 
+              <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-transparent border-0 border-b border-outline-variant py-2 focus:ring-0 focus:border-lime-accent transition-colors placeholder:text-white/20" 
-                placeholder="name@company.com" 
+                className="bg-transparent border-0 border-b border-outline-variant py-2 focus:ring-0 focus:border-lime-accent transition-colors placeholder:text-white/20 text-white"
+                placeholder="name@company.com"
                 required
               />
             </div>
@@ -145,12 +187,12 @@ export default function SignupPage() {
                 Password
               </label>
               <div className="relative">
-                <input 
+                <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={handlePasswordChange}
-                  className="w-full bg-transparent border-0 border-b border-outline-variant py-2 pr-8 focus:ring-0 focus:border-lime-accent transition-colors placeholder:text-white/20" 
-                  placeholder="••••••••" 
+                  className="w-full bg-transparent border-0 border-b border-outline-variant py-2 pr-8 focus:ring-0 focus:border-lime-accent transition-colors placeholder:text-white/20 text-white"
+                  placeholder="••••••••"
                   required
                 />
                 <button 
@@ -159,9 +201,9 @@ export default function SignupPage() {
                   className="absolute right-0 bottom-3"
                 >
                   {showPassword ? (
-                    <EyeOff className="w-4 h-4 text-neutral-400" />
+                    <EyeOff className="w-4 h-4 text-white/60 hover:text-white/80" />
                   ) : (
-                    <Eye className="w-4 h-4 text-neutral-400" />
+                    <Eye className="w-4 h-4 text-white/60 hover:text-white/80" />
                   )}
                 </button>
               </div>

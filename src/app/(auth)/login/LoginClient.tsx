@@ -26,16 +26,33 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   
-  const { loading, error, clearError, login } = useAuth()
+  const { loading, error, clearError, login, success } = useAuth()
   const searchParams = useSearchParams()
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   useEffect(() => {
     const message = searchParams.get('message')
     if (message) {
-      // You could show a success toast here
-      console.log('Success message:', message)
+      setSuccessMessage(message)
+      // Clear success message after 5 seconds
+      const timer = setTimeout(() => {
+        setSuccessMessage(null)
+      }, 5000)
+      return () => clearTimeout(timer)
     }
   }, [searchParams])
+
+  useEffect(() => {
+    // Show login success message when auth succeeds
+    if (success) {
+      setSuccessMessage('Login successful! Redirecting to home...')
+      // Clear success message after 5 seconds
+      const timer = setTimeout(() => {
+        setSuccessMessage(null)
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [success])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,10 +86,39 @@ export default function LoginPage() {
           <h1 className="text-[28px] font-medium text-white">Welcome back.</h1>
           <p className="text-[14px] text-[#71717A]">Log in to continue.</p>
           
+          {/* Success Display */}
+          {successMessage && !error && (
+            <div className="bg-green-500/10 border border-green-500/30 text-green-400 text-sm p-3 rounded flex items-center justify-between">
+              {successMessage}
+              <button 
+                onClick={() => setSuccessMessage(null)}
+                className="text-green-400 hover:text-green-300 ml-4"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
           {/* Error Display */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm p-3 rounded">
-              {error.message}
+            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm p-3 rounded flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span>{error.message}</span>
+                {error.field && (
+                  <span className="text-xs bg-red-500/20 px-2 py-1 rounded">
+                    {error.field}
+                  </span>
+                )}
+              </div>
+              <button 
+                onClick={() => {
+                  clearError()
+                  setSuccessMessage(null)
+                }}
+                className="text-red-400 hover:text-red-300 ml-4"
+              >
+                ×
+              </button>
             </div>
           )}
         </div>
