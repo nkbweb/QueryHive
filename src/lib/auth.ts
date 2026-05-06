@@ -22,6 +22,7 @@ export interface LoginData {
 export function useAuth() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<AuthError | null>(null)
+  const [success, setSuccess] = useState<boolean>(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -196,12 +197,11 @@ export function useAuth() {
 
       if (authData.user) {
         console.log('Login successful, user data:', authData.user)
-        
-        // Manually set cookies to ensure persistence
-              if (authData.user) {
-          //  Let Supabase handle session
+        setSuccess(true)
+        // Brief delay to show success message before redirect
+        setTimeout(() => {
           window.location.href = '/home'
-        }
+        }, 1000)
       } else {
         console.log('No user data returned')
         setError({ message: 'Login failed: No user data returned' })
@@ -228,6 +228,7 @@ export function useAuth() {
   return {
     loading,
     error,
+    success,
     clearError,
     signup,
     login,
