@@ -121,7 +121,7 @@ export default function UserSearch({
           onChange={handleInputChange}
           onFocus={() => query.length >= 2 && setIsOpen(true)}
           placeholder={placeholder}
-          className="w-full pl-10 pr-4 py-2 bg-[#131315] border border-white/[0.1] rounded-lg text-white placeholder-white/40 text-sm focus:outline-none focus:border-[#E8FF47]/50 focus:ring-1 focus:ring-[#E8FF47]/50"
+          className="w-full pl-10 pr-4 py-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-white placeholder-white/40 text-sm focus:outline-none focus:border-[#E8FF47]/50 focus:ring-1 focus:ring-[#E8FF47]/50"
         />
         {isLoading && (
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -132,7 +132,7 @@ export default function UserSearch({
 
       {/* Search Results Dropdown */}
       {isOpen && (
-        <div className="absolute top-full mt-2 w-full bg-[#131315] border border-white/[0.1] rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+        <div className="absolute top-full mt-2 w-full bg-[#131315] border border-white/[0.08] rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
           {hasSearched && results.length === 0 ? (
             <div className="p-4 text-center">
               <Users className="w-8 h-8 text-white/20 mx-auto mb-2" />
@@ -152,7 +152,7 @@ export default function UserSearch({
                       onClick={handleUserClick}
                       className="flex-shrink-0"
                     >
-                      <div className="w-10 h-10 rounded-full bg-[#1C1B1E] flex items-center justify-center overflow-hidden">
+                      <div className="w-10 h-10 rounded-full bg-white/[0.04] flex items-center justify-center overflow-hidden">
                         {user.avatar_url ? (
                           <Image
                             src={user.avatar_url}

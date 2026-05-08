@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Bookmark, ArrowBigUp, MessageSquare, Clock, Trash2, BookmarkX } from 'lucide-react'
+import { useNavigationWithLoading } from '@/hooks/useNavigationWithLoading'
 
-interface Bookmark {
+interface BookmarkItem {
   id: string
   createdAt: string
   question: {
@@ -17,181 +19,217 @@ interface Bookmark {
     createdAt: string
     username: string
     answersCount: number
-    tags: Array<{
-      id: string
-      name: string
-      color: string
-    }>
+    tags: Array<{ id: string; name: string; color: string }>
   }
 }
 
-// Generate random colors for tags
-const getRandomTagColor = (tagId: string) => {
-  const colors = [
-    '#E8FF47', // lime
-    '#FF6B6B', // red
-    '#4ECDC4', // teal
-    '#45B7D1', // blue
-    '#FFA07A', // light salmon
-    '#98D8C8', // mint
-    '#FFD93D', // yellow
-    '#6BCF7F', // green
-    '#C9B6E4', // lavender
-    '#FFB6C1', // pink
-    '#87CEEB', // sky blue
-    '#F4A460', // sandy brown
-  ]
-  
-  const index = tagId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length
-  return colors[index]
-}
+const TAG_COLORS = [
+  'text-cyan-300/80 bg-cyan-500/[0.07] border-cyan-400/15',
+  'text-lime-300/80 bg-lime-500/[0.07] border-lime-400/15',
+  'text-purple-300/80 bg-purple-500/[0.07] border-purple-400/15',
+  'text-pink-300/80 bg-pink-500/[0.07] border-pink-400/15',
+  'text-amber-300/80 bg-amber-500/[0.07] border-amber-400/15',
+]
 
-// Format date to show only date without time
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  })
-}
+const formatDate = (d: string) =>
+  new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
 
 export default function BookmarksPage() {
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
+  const { navigate } = useNavigationWithLoading()
+  const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
-  const router = useRouter()
+  const [removing, setRemoving] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const init = async () => {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
-    }
-
-    const fetchBookmarks = async () => {
       try {
-        const response = await fetch('/api/bookmarks')
-        if (response.ok) {
-          const data = await response.json()
+        const res = await fetch('/api/bookmarks')
+        if (res.ok) {
+          const data = await res.json()
           setBookmarks(data.bookmarks || [])
         }
-      } catch (error) {
-        console.error('Error fetching bookmarks:', error)
+      } catch (e) {
+        console.error(e)
       } finally {
         setLoading(false)
       }
     }
-
-    fetchUser()
-    fetchBookmarks()
+    init()
   }, [])
 
-  const handleRemoveBookmark = async (questionId: string) => {
+  const handleRemove = async (questionId: string) => {
+    setRemoving(questionId)
     try {
-      const response = await fetch(`/api/bookmarks?questionId=${questionId}`, {
-        method: 'DELETE'
-      })
-      
-      if (response.ok) {
-        setBookmarks(prev => prev.filter(bookmark => bookmark.question.id !== questionId))
-      }
-    } catch (error) {
-      console.error('Error removing bookmark:', error)
+      const res = await fetch(`/api/bookmarks?questionId=${questionId}`, { method: 'DELETE' })
+      if (res.ok) setBookmarks(prev => prev.filter(b => b.question.id !== questionId))
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setRemoving(null)
     }
   }
 
-  if (!user) {
+  /* ── Auth guard ─────────────────────────────────────────── */
+  if (!user && !loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex h-full items-center justify-center bg-[#050505]">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">Please Login</h1>
-          <p className="text-white/60">You must be logged in to view your bookmarks.</p>
+          <Bookmark size={40} className="text-gray-700 mx-auto mb-4" />
+          <h1 className="text-lg font-medium text-white mb-2">Sign in to view bookmarks</h1>
+          <p className="text-sm text-gray-600">Save questions to access them anytime.</p>
         </div>
       </div>
     )
   }
 
+  /* ── Loading skeleton ──────────────────────────────────── */
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-white/60">Loading bookmarks...</div>
+      <div className="flex h-full flex-col bg-[#050505] border-x border-white/[0.05]">
+        <header className="px-4 pt-6 pb-4 border-b border-white/[0.05]">
+          <div className="h-6 w-32 bg-white/[0.05] animate-pulse rounded" />
+        </header>
+        <div className="flex-1">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="w-full h-12 border-b border-white/[0.03] flex items-center px-4 gap-6">
+              <div className="w-16 h-3 bg-white/[0.05] animate-pulse rounded" />
+              <div className="flex-1 h-3 bg-white/[0.05] animate-pulse rounded" />
+              <div className="w-20 h-3 bg-white/[0.05] animate-pulse rounded" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
 
-  return (
-    <main className="pt-[20px] sm:pt-[80px] pb-24 min-h-screen flex justify-center">
-      <div className="flex gap-16 w-full max-w-[1020px] px-4 sm:px-6">
-        {/* Main Content */}
-        <div className="flex-1">
-          <div className="mb-6 sm:mb-8">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-[-0.02em] text-white mb-2">Bookmarks</h1>
-            <p className="text-sm text-white/60 hidden sm:block">Questions you&apos;ve saved for later</p>
+  /* ── Empty state ────────────────────────────────────────── */
+  if (bookmarks.length === 0) {
+    return (
+      <div className="flex h-full flex-col bg-[#050505] border-x border-white/[0.05]">
+        <header className="px-4 pt-6 pb-4 border-b border-white/[0.05]">
+          <div className="flex items-center gap-4">
+            <h1 className="text-xl font-medium text-white tracking-tight">Bookmarks</h1>
+            <span className="text-[11px] font-mono bg-white/[0.05] text-gray-500 px-2 py-0.5 rounded border border-white/[0.05]">
+              0 SAVED
+            </span>
           </div>
-
-          {bookmarks.length === 0 ? (
-            <div className="text-center py-12 sm:py-16">
-              <div className="relative inline-block mb-4 sm:mb-6">
-                <div className="absolute inset-0 bg-gradient-to-r from-lime-accent/20 to-blue-accent/20 rounded-full blur-xl"></div>
-                <span className="material-symbols-outlined text-5xl sm:text-6xl text-lime-accent relative">bookmark_border</span>
-              </div>
-              <h2 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3 bg-gradient-to-r from-lime-accent to-blue-accent bg-clip-text text-transparent">No bookmarks yet</h2>
-              <p className="text-white/60 mb-6 sm:mb-8 max-w-md mx-auto text-sm sm:text-base">Start bookmarking questions to build your personal collection and never lose track of important content</p>
-              <Link 
-                href="/home"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-lime-accent to-blue-accent hover:from-lime-accent/90 hover:to-blue-accent/90 text-background px-5 sm:px-6 py-2.5 sm:py-3 font-bold uppercase tracking-widest text-xs rounded-lg shadow-lg"
-              >
-                <span className="material-symbols-outlined text-[16px]">explore</span>
-                Explore Questions
-              </Link>
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              {bookmarks.map((bookmark, index) => (
-                <div key={bookmark.id} className="h-[48px] sm:h-[52px] px-3 sm:px-6 flex items-center gap-3 sm:gap-4 border-b border-white/[0.03] active-border-hover group">
-                  {/* Bookmark Icon */}
-                  <div className="w-8 sm:w-10 text-[11px] font-label text-lime-accent/60 flex flex-col items-center group-hover:text-lime-accent hidden sm:flex">
-                    <span className="material-symbols-outlined text-[14px] sm:text-[16px]">bookmark</span>
-                  </div>
-
-                  {/* Status Dot */}
-                  <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-lime-accent hidden sm:block"></div>
-
-                  {/* Content */}
-                  <div className="flex-1 flex items-center justify-between min-w-0">
-                    <div className="flex flex-col max-w-[250px] sm:max-w-[600px]">
-                      <Link 
-                        href={`/questions/${bookmark.question.id}`}
-                        className="text-xs sm:text-sm text-white hover:text-lime-accent truncate block"
-                      >
-                        {bookmark.question.title}
-                      </Link>
-                    </div>
-
-                    {/* Right Info */}
-                    <div className="flex items-center gap-3 sm:gap-6 text-[10px] sm:text-[11px] text-white/30 font-label">
-                      <span className="hidden sm:block">{formatDate(bookmark.question.createdAt)}</span>
-                      <span className="text-white/60">
-                        {bookmark.question.answersCount} {bookmark.question.answersCount === 1 ? 'ans' : 'ans'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Remove Button */}
-                  <button
-                    onClick={() => handleRemoveBookmark(bookmark.question.id)}
-                    className="text-white/30 hover:text-red-400 transition-colors p-1"
-                    title="Remove bookmark"
-                  >
-                    <span className="material-symbols-outlined text-[14px] sm:text-[16px]">bookmark_remove</span>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+        </header>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 text-gray-600">
+          <BookmarkX size={40} strokeWidth={1.5} />
+          <div className="text-center">
+            <p className="text-sm text-gray-500 mb-1">No bookmarks yet</p>
+            <p className="text-xs text-gray-700">Save questions you want to revisit</p>
+          </div>
+          <button
+            onClick={() => navigate('/explore')}
+            className="mt-2 px-4 py-1.5 border border-white/[0.08] text-xs text-gray-400 hover:text-white hover:border-white/20 transition-colors rounded"
+          >
+            Browse questions
+          </button>
         </div>
       </div>
-    </main>
+    )
+  }
+
+  /* ── Main list ──────────────────────────────────────────── */
+  return (
+    <section className="flex flex-col h-full bg-[#050505] border-x border-white/[0.05] min-w-0 overflow-hidden">
+
+      {/* Header */}
+      <header className="w-full px-4 pt-6 pb-4 border-b border-white/[0.05]">
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-medium text-white tracking-tight">Bookmarks</h1>
+          <span className="text-[11px] font-mono bg-white/[0.05] text-gray-500 px-2 py-0.5 rounded border border-white/[0.05]">
+            {bookmarks.length} SAVED
+          </span>
+        </div>
+      </header>
+
+      {/* List */}
+      <div className="flex-1 overflow-y-auto no-scrollbar">
+        <AnimatePresence>
+          {bookmarks.map((bm) => {
+            const q = bm.question
+            return (
+              <motion.div
+                key={bm.id}
+                layout
+                exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                transition={{ duration: 0.2 }}
+                className="group flex items-center w-full px-4 py-3 border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors gap-6 min-w-0"
+              >
+                {/* Stats column */}
+                <div className="flex items-center gap-2 sm:gap-4 min-w-[40px] sm:min-w-[100px]">
+                  <div className="flex items-center gap-1.5 min-w-[40px]">
+                    <ArrowBigUp
+                      size={16}
+                      className={q.upvotes > 0 ? 'text-orange-500' : 'text-gray-700'}
+                    />
+                    <span className={`text-xs font-mono ${q.upvotes > 0 ? 'text-gray-200' : 'text-gray-600'}`}>
+                      {q.upvotes}
+                    </span>
+                  </div>
+                  <div className="hidden sm:flex items-center gap-1.5">
+                    <MessageSquare
+                      size={14}
+                      className={q.answersCount > 0 ? 'text-blue-500' : 'text-gray-700'}
+                    />
+                    <span className="text-xs font-mono text-gray-600">{q.answersCount}</span>
+                  </div>
+                </div>
+
+                {/* Title + tags */}
+                <div
+                  className="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-4 min-w-0 cursor-pointer"
+                  onClick={() => navigate(`/questions/${q.id}`)}
+                >
+                  <h2 className="text-sm text-gray-300 group-hover:text-white transition-colors truncate">
+                    {q.title}
+                  </h2>
+                  {q.tags.length > 0 && (
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {q.tags.slice(0, 3).map((tag, idx) => (
+                        <span
+                          key={tag.id}
+                          className={`px-2 py-0.5 border text-[10px] rounded font-medium ${TAG_COLORS[idx % TAG_COLORS.length]}`}
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Date + remove */}
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-gray-600 font-mono">
+                    <Clock size={12} />
+                    <span>{formatDate(q.createdAt)}</span>
+                  </div>
+                  <button
+                    onClick={() => handleRemove(q.id)}
+                    disabled={removing === q.id}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-700 hover:text-red-400 disabled:text-gray-700 p-1"
+                    title="Remove bookmark"
+                  >
+                    {removing === q.id ? (
+                      <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeDasharray="31.4" strokeDashoffset="10" />
+                      </svg>
+                    ) : (
+                      <Trash2 size={14} />
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            )
+          })}
+        </AnimatePresence>
+      </div>
+    </section>
   )
 }

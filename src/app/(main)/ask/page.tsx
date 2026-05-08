@@ -1,14 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import Breadcrumb from '@/components/ask/Breadcrumb'
-import AIInfoStrip from '@/components/ask/AIInfoStrip'
-import TagsSelector from '@/components/ask/TagsSelector'
-import Actions from '@/components/ask/Actions'
-import Guidelines from '@/components/ask/Guidelines'
-import RelatedQueries from '@/components/ask/RelatedQueries'
+import Markdown from '@/lib/utils/markdown'
 
 interface Tag {
   id: string
@@ -24,6 +19,10 @@ export default function AskQuestionPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [formData, setFormData] = useState({ title: '', content: '' })
   const [errors, setErrors] = useState({ title: '', content: '', general: '' })
+  const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write')
+  const [focused, setFocused] = useState<'title' | 'content' | null>(null)
+  const [step, setStep] = useState(1)
+  const tagInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -39,6 +38,13 @@ export default function AskQuestionPage() {
     fetchUser()
     fetchTags()
   }, [])
+
+  // Determine current step based on content
+  useEffect(() => {
+    if (formData.title.length >= 10) setStep(2)
+    if (formData.title.length >= 10 && formData.content.length >= 30) setStep(3)
+    if (formData.title.length < 10) setStep(1)
+  }, [formData])
 
   const validateForm = () => {
     const newErrors = { title: '', content: '', general: '' }
@@ -90,189 +96,512 @@ export default function AskQuestionPage() {
     }
   }
 
-  const isFormValid = formData.title.trim() && formData.content.trim() && !errors.title && !errors.content
-  const titleLen = formData.title.length
-  const contentLen = formData.content.length
+  const completionPercent = Math.min(100, Math.round(
+    ((formData.title.length >= 10 ? 40 : (formData.title.length / 10) * 40) +
+    (formData.content.length >= 30 ? 40 : (formData.content.length / 30) * 40) +
+    (selectedTags.length > 0 ? 20 : 0))
+  ))
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="text-center max-w-sm">
-          <div className="w-16 h-16 rounded-2xl bg-surface-container flex items-center justify-center mx-auto mb-4">
-            <span className="material-symbols-outlined text-3xl text-white/30">lock</span>
+      <div className="min-h-screen bg-[#08080A] flex items-center justify-center px-4">
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
+          .font-syne { font-family: 'Syne', sans-serif; }
+          .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
+        `}</style>
+        <div className="text-center">
+          <div className="w-20 h-20 rounded-full border border-[#a8ff3e]/20 flex items-center justify-center mx-auto mb-6 relative">
+            <div className="absolute inset-0 rounded-full bg-[#a8ff3e]/5"></div>
+            <span className="material-symbols-outlined text-3xl text-[#a8ff3e]/40">lock</span>
           </div>
-          <h1 className="text-xl font-semibold text-white mb-2">Sign in required</h1>
-          <p className="text-white/40 text-sm">You must be logged in to ask a question.</p>
+          <h1 className="font-syne text-2xl font-bold text-white mb-3">Authentication Required</h1>
+          <p className="text-white/40 font-mono-custom text-sm">Sign in to post your question</p>
         </div>
       </div>
     )
   }
 
   return (
-    <main className="min-h-screen bg-[#08080A]">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <main className="min-h-screen bg-[#08080A] relative overflow-hidden">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
+        
+        .font-syne { font-family: 'Syne', sans-serif; }
+        .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
+        
+        .lime { color: #a8ff3e; }
+        .lime-bg { background: #a8ff3e; }
+        
+        /* Grid background */
+        .grid-bg {
+          background-image: 
+            linear-gradient(rgba(168,255,62,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(168,255,62,0.03) 1px, transparent 1px);
+          background-size: 60px 60px;
+        }
+        
+        /* Glow orb */
+        .glow-orb {
+          position: absolute;
+          width: 600px;
+          height: 600px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(168,255,62,0.06) 0%, transparent 70%);
+          pointer-events: none;
+        }
+        
+        /* Custom input styles */
+        .field-input {
+          background: transparent;
+          border: none;
+          outline: none;
+          width: 100%;
+          color: white;
+          font-family: 'Syne', sans-serif;
+          font-size: 1rem;
+          line-height: 1.6;
+        }
+        
+        .field-input::placeholder {
+          color: rgba(255,255,255,0.2);
+        }
+        
+        .field-wrap {
+          position: relative;
+          background: #0D0D0F;
+          border: 1px solid #1e1e22;
+          transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .field-wrap.focused {
+          border-color: rgba(168,255,62,0.4);
+          box-shadow: 0 0 0 1px rgba(168,255,62,0.1), inset 0 0 40px rgba(168,255,62,0.02);
+        }
+        
+        .field-wrap.has-error {
+          border-color: rgba(239,68,68,0.5);
+        }
+
+        /* Step indicator */
+        .step-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #1e1e22;
+          transition: all 0.4s ease;
+        }
+        .step-dot.active {
+          background: #a8ff3e;
+          box-shadow: 0 0 12px rgba(168,255,62,0.6);
+        }
+        .step-dot.done {
+          background: rgba(168,255,62,0.4);
+        }
+
+        /* Tag pill */
+        .tag-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 12px;
+          background: rgba(168,255,62,0.08);
+          border: 1px solid rgba(168,255,62,0.2);
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 0.75rem;
+          color: #a8ff3e;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .tag-pill:hover {
+          background: rgba(168,255,62,0.15);
+        }
+        .tag-pill.selected {
+          background: rgba(168,255,62,0.15);
+          border-color: rgba(168,255,62,0.5);
+        }
+
+        /* Submit button */
+        .submit-btn {
+          position: relative;
+          overflow: hidden;
+          background: #a8ff3e;
+          color: #08080A;
+          font-family: 'Syne', sans-serif;
+          font-weight: 700;
+          font-size: 0.95rem;
+          letter-spacing: 0.02em;
+          padding: 14px 40px;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        .submit-btn::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%);
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        .submit-btn:hover::before { opacity: 1; }
+        .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(168,255,62,0.4); }
+        .submit-btn:active { transform: translateY(0); }
+        .submit-btn:disabled {
+          background: #1e1e22;
+          color: rgba(255,255,255,0.2);
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
+        .submit-btn:disabled::before { display: none; }
+
+        /* Progress bar */
+        .progress-bar {
+          height: 2px;
+          background: #1e1e22;
+          position: relative;
+          overflow: hidden;
+        }
+        .progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #a8ff3e, rgba(168,255,62,0.6));
+          transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+        }
+        .progress-fill::after {
+          content: '';
+          position: absolute;
+          right: 0;
+          top: -2px;
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #a8ff3e;
+          box-shadow: 0 0 10px rgba(168,255,62,0.8);
+        }
+
+        /* Number label */
+        .section-num {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 0.7rem;
+          color: rgba(168,255,62,0.5);
+          letter-spacing: 0.1em;
+        }
+
+        /* Tab buttons */
+        .tab-btn {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 0.75rem;
+          letter-spacing: 0.05em;
+          padding: 6px 16px;
+          border: 1px solid transparent;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          background: transparent;
+          color: rgba(255,255,255,0.3);
+        }
+        .tab-btn.active {
+          border-color: rgba(168,255,62,0.3);
+          color: #a8ff3e;
+          background: rgba(168,255,62,0.05);
+        }
+        .tab-btn:not(.active):hover {
+          color: rgba(255,255,255,0.6);
+          border-color: rgba(255,255,255,0.1);
+        }
+
+        /* Char counter */
+        .char-ring {
+          width: 32px;
+          height: 32px;
+        }
+        
+        /* Animate in */
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in {
+          animation: slideUp 0.5s ease forwards;
+        }
+        .animate-in-delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .animate-in-delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .animate-in-delay-3 { animation-delay: 0.3s; opacity: 0; }
+
+        /* Scrollbar */
+        textarea::-webkit-scrollbar { width: 4px; }
+        textarea::-webkit-scrollbar-track { background: transparent; }
+        textarea::-webkit-scrollbar-thumb { background: #1e1e22; border-radius: 2px; }
+        
+        /* Corner accent */
+        .corner-accent::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0;
+          width: 40px; height: 40px;
+          border-top: 2px solid rgba(168,255,62,0.3);
+          border-left: 2px solid rgba(168,255,62,0.3);
+        }
+        .corner-accent::after {
+          content: '';
+          position: absolute;
+          bottom: 0; right: 0;
+          width: 40px; height: 40px;
+          border-bottom: 2px solid rgba(168,255,62,0.1);
+          border-right: 2px solid rgba(168,255,62,0.1);
+        }
+      `}</style>
+
+      {/* Background */}
+      <div className="grid-bg fixed inset-0 pointer-events-none" />
+      <div className="glow-orb" style={{ top: '-200px', right: '-100px' }} />
+      <div className="glow-orb" style={{ bottom: '-200px', left: '-100px', opacity: 0.5 }} />
+
+      <div className="relative max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
         
         {/* Header */}
-        <div className="mb-10">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-lime-accent/20 to-lime-accent/5">
-              <span className="material-symbols-outlined text-2xl text-lime-accent">quiz</span>
+        <div className="mb-12 animate-in">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="section-num">ASK / NEW</span>
+            <div className="h-px flex-1 bg-gradient-to-r from-[#a8ff3e]/20 to-transparent" />
+          </div>
+          <h1 className="font-syne text-5xl sm:text-6xl font-800 text-white leading-none tracking-tight mb-4">
+            Ask a<br />
+            <span style={{ color: '#a8ff3e' }}>Question.</span>
+          </h1>
+          <p className="font-mono-custom text-sm text-white/30 mt-4">
+            Community + AI answers await —
+          </p>
+        </div>
+
+        {/* Completion progress */}
+        <div className="mb-10 animate-in animate-in-delay-1">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className={`step-dot ${step >= 1 ? 'active' : ''}`} />
+              <div className={`step-dot ${step >= 2 ? 'active' : step >= 1 ? 'done' : ''}`} />
+              <div className={`step-dot ${step >= 3 ? 'active' : step >= 2 ? 'done' : ''}`} />
             </div>
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1">Ask a Question</h1>
-              <p className="text-white/60 hidden sm:block">Get help from our community and AI assistant. Be specific and provide enough details for others to help you.</p>
-            </div>
+            <span className="font-mono-custom text-xs text-white/20">{completionPercent}% complete</span>
+          </div>
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: `${completionPercent}%` }} />
           </div>
         </div>
 
-        {/* Form Card */}
-        <div className="bg-[#131315] rounded-3xl border border-[#1C1B1E] p-6 sm:p-8 space-y-6">
+        {/* Main form */}
+        <div className="space-y-6 animate-in animate-in-delay-2">
 
-          {/* Title Input */}
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-white">
-              Question Title <span className="text-lime-accent">*</span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => { setFormData({ ...formData, title: e.target.value }); if (errors.title) setErrors({ ...errors, title: '' }) }}
-                className={`
-                  w-full px-4 py-3.5 bg-[#08080A] border-2 rounded-xl text-white placeholder:text-white/40
-                  focus:outline-none focus:border-lime-accent/50 focus:bg-[#0A0A0C]
-                  transition-all duration-300
-                  ${errors.title ? 'border-red-500/50' : 'border-[#1C1B1E]'}
-                `}
-                placeholder=""
-                maxLength={300}
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <span className={`text-xs ${titleLen > 280 ? 'text-red-400' : 'text-white/30'}`}>
-                  {titleLen}/300
+          {/* Title */}
+          <div className="relative corner-accent">
+            <div className={`field-wrap ${focused === 'title' ? 'focused' : ''} ${errors.title ? 'has-error' : ''} p-6`}>
+              <div className="flex items-start gap-4">
+                <div className="shrink-0 mt-1">
+                  <span className="section-num block mb-1">01</span>
+                  <div className="w-px h-full bg-[#1e1e22] mx-auto" style={{ minHeight: '40px' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <label className="font-syne text-xs font-600 text-white/50 uppercase tracking-widest block mb-3">
+                    Question Title <span style={{ color: '#a8ff3e' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => { setFormData({ ...formData, title: e.target.value }); if (errors.title) setErrors({ ...errors, title: '' }) }}
+                    onFocus={() => setFocused('title')}
+                    onBlur={() => setFocused(null)}
+                    className="field-input text-xl font-syne font-500"
+                    placeholder="What are you trying to figure out?"
+                    maxLength={300}
+                  />
+                  <div className="flex items-center justify-between mt-3">
+                    {errors.title ? (
+                      <p className="font-mono-custom text-xs text-red-400">{errors.title}</p>
+                    ) : (
+                      <p className="font-mono-custom text-xs text-white/20">Min. 10 characters</p>
+                    )}
+                    <span className="font-mono-custom text-xs text-white/20">
+                      {formData.title.length}<span className="text-white/10">/300</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className={`field-wrap ${focused === 'content' ? 'focused' : ''} ${errors.content ? 'has-error' : ''}`}>
+            <div className="p-6 pb-0">
+              <div className="flex items-center gap-4">
+                <div className="shrink-0">
+                  <span className="section-num block">02</span>
+                </div>
+                <div className="flex-1">
+                  <label className="font-syne text-xs font-600 text-white/50 uppercase tracking-widest">
+                    Details <span style={{ color: '#a8ff3e' }}>*</span>
+                  </label>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setActiveTab('write')} className={`tab-btn ${activeTab === 'write' ? 'active' : ''}`}>
+                    WRITE
+                  </button>
+                  <button onClick={() => setActiveTab('preview')} className={`tab-btn ${activeTab === 'preview' ? 'active' : ''}`}>
+                    PREVIEW
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 pt-4 pb-6">
+              {activeTab === 'write' ? (
+                <textarea
+                  value={formData.content}
+                  onChange={(e) => {
+                    setFormData({ ...formData, content: e.target.value })
+                    if (errors.content) setErrors({ ...errors, content: '' })
+                  }}
+                  onFocus={() => setFocused('content')}
+                  onBlur={() => setFocused(null)}
+                  className="field-input resize-none text-base text-white/80 leading-relaxed"
+                  placeholder="Describe your problem in detail. Include what you've tried, what you expected, and what actually happened. Markdown is supported."
+                  rows={10}
+                />
+              ) : (
+                <div className="min-h-[200px] text-white/70 leading-relaxed font-syne text-base">
+                  {formData.content.trim() ? (
+                    <Markdown content={formData.content} />
+                  ) : (
+                    <p className="text-white/20 italic font-mono-custom text-sm">Nothing to preview yet...</p>
+                  )}
+                </div>
+              )}
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#1e1e22]">
+                {errors.content ? (
+                  <p className="font-mono-custom text-xs text-red-400">{errors.content}</p>
+                ) : (
+                  <p className="font-mono-custom text-xs text-white/20">Markdown supported</p>
+                )}
+                <span className="font-mono-custom text-xs text-white/20">
+                  {formData.content.length} chars
                 </span>
               </div>
             </div>
-            {errors.title && (
-              <p className="text-sm text-red-400 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-base">error_outline</span>
-                {errors.title}
-              </p>
-            )}
-          </div>
-
-          {/* Content Input */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-white">
-                Details <span className="text-lime-accent">*</span>
-              </label>
-              <span className="text-xs text-white/40 flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">code</span>
-                Markdown supported
-              </span>
-            </div>
-            <textarea
-              value={formData.content}
-              onChange={(e) => { setFormData({ ...formData, content: e.target.value }); if (errors.content) setErrors({ ...errors, content: '' }) }}
-              className={`
-                w-full px-4 py-3.5 bg-[#08080A] border-2 rounded-xl text-white placeholder:text-white/40
-                focus:outline-none focus:border-lime-accent/50 focus:bg-[#0A0A0C]
-                resize-none min-h-[180px] leading-relaxed
-                transition-all duration-300
-                ${errors.content ? 'border-red-500/50' : 'border-[#1C1B1E]'}
-              `}
-              placeholder=""
-              rows={8}
-            />
-            {errors.content && (
-              <p className="text-sm text-red-400 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-base">error_outline</span>
-                {errors.content}
-              </p>
-            )}
           </div>
 
           {/* Tags */}
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-white">
-              Tags
-            </label>
-            <div className="bg-[#08080A] border-2 border-[#1C1B1E] rounded-xl p-4 focus-within:border-lime-accent/50 transition-all duration-300">
-              {selectedTags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {selectedTags.map(tagId => {
-                    const tag = tags.find(t => t.id === tagId)
-                    return tag ? (
+          <div className="field-wrap p-6">
+            <div className="flex items-start gap-4">
+              <div className="shrink-0">
+                <span className="section-num block">03</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <label className="font-syne text-xs font-600 text-white/50 uppercase tracking-widest block mb-4">
+                  Tags <span className="text-white/20">(optional)</span>
+                </label>
+
+                {/* Selected tags */}
+                {selectedTags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {selectedTags.map(tagId => {
+                      const tag = tags.find(t => t.id === tagId)
+                      return tag ? (
+                        <span key={tag.id} className="tag-pill selected">
+                          #{tag.name}
+                          <button
+                            onClick={() => toggleTag(tag.id)}
+                            className="ml-1 opacity-60 hover:opacity-100 transition-opacity text-base leading-none"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ) : null
+                    })}
+                  </div>
+                )}
+
+                {/* Tag input */}
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-white/20 font-mono-custom text-sm">#</span>
+                  <input
+                    ref={tagInputRef}
+                    type="text"
+                    placeholder="type tag + enter"
+                    className="field-input font-mono-custom text-sm text-white/60"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                        handleAddCustomTag(e.currentTarget.value.trim())
+                        e.currentTarget.value = ''
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* Suggestion chips */}
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {tags.slice(0, 12).map(tag => (
                       <button
                         key={tag.id}
                         onClick={() => toggleTag(tag.id)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-lime-accent/10 border border-lime-accent/30 rounded-lg text-lime-accent text-sm hover:bg-lime-accent/20 transition-all"
+                        className={`tag-pill ${selectedTags.includes(tag.id) ? 'selected' : ''}`}
                       >
-                        <span>#{tag.name}</span>
-                        <span className="material-symbols-outlined text-sm">close</span>
+                        #{tag.name}
                       </button>
-                    ) : null
-                  })}
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <span className="text-white/30 text-lg">#</span>
-                <input
-                  type="text"
-                  placeholder="Add tags (e.g., javascript, react)"
-                  className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-white/40 text-sm"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                      handleAddCustomTag(e.currentTarget.value.trim())
-                      e.currentTarget.value = ''
-                    }
-                  }}
-                />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-            <p className="text-xs text-white/40">Press Enter to add tags. Tags help others find your question.</p>
           </div>
 
-          {/* Error Message */}
+          {/* Error */}
           {errors.general && (
-            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-              <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-red-400 text-lg mt-0.5">error</span>
-                <p className="text-red-400 text-sm">{errors.general}</p>
-              </div>
+            <div className="p-4 border border-red-500/20 bg-red-500/5 flex items-center gap-3">
+              <span className="text-red-400 text-lg">!</span>
+              <p className="font-mono-custom text-xs text-red-400">{errors.general}</p>
             </div>
           )}
 
-          {/* Submit Button */}
-          <button
-            onClick={handleSubmit}
-            disabled={loading || !formData.title.trim() || !formData.content.trim()}
-            className="w-full py-4 bg-gradient-to-r from-lime-accent to-lime-accent/90 text-surface font-bold rounded-xl
-              hover:from-lime-accent/90 hover:to-lime-accent/80 transition-all duration-300
-              disabled:opacity-50 disabled:cursor-not-allowed
-              flex items-center justify-center gap-2 shadow-lg shadow-lime-accent/20"
-          >
-            {loading ? (
-              <>
-                <span className="material-symbols-outlined animate-spin">refresh</span>
-                Posting...
-              </>
-            ) : (
-              <>
-                <span className="material-symbols-outlined">send</span>
-                Post Question
-              </>
-            )}
-          </button>
+          {/* Submit row */}
+          <div className="flex items-center justify-between pt-2">
+            <div className="font-mono-custom text-xs text-white/20 space-y-1">
+              <div className={`flex items-center gap-2 transition-colors ${formData.title.length >= 10 ? 'text-[#a8ff3e]/50' : ''}`}>
+                <span>{formData.title.length >= 10 ? '✓' : '○'}</span>
+                <span>Title complete</span>
+              </div>
+              <div className={`flex items-center gap-2 transition-colors ${formData.content.length >= 30 ? 'text-[#a8ff3e]/50' : ''}`}>
+                <span>{formData.content.length >= 30 ? '✓' : '○'}</span>
+                <span>Details added</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={loading || !formData.title.trim() || !formData.content.trim()}
+              className="submit-btn"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeDasharray="31.4" strokeDashoffset="10" />
+                  </svg>
+                  Posting...
+                </span>
+              ) : (
+                'Post Question →'
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* Footer Info */}
-        <div className="mt-6 text-sm text-white/40">
-          <p>Your question will be analyzed by AI and shared with the community</p>
+        {/* Footer note */}
+        <div className="mt-16 pt-8 border-t border-[#1e1e22] animate-in animate-in-delay-3">
+          <p className="font-mono-custom text-xs text-white/15 text-center">
+            Questions may receive AI-generated answers alongside community responses.
+          </p>
         </div>
       </div>
     </main>
-
   )
 }

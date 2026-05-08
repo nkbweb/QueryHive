@@ -131,13 +131,13 @@ export default function ActivityFeed({ userId, className = '' }: ActivityFeedPro
         <h2 className="text-lg font-medium text-white">Activity Feed</h2>
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-[#131315] rounded-lg p-4 animate-pulse">
+            <div key={i} className="bg-transparent border border-white/[0.04] rounded-lg p-4 animate-pulse">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-white/10 rounded-full"></div>
+                <div className="w-8 h-8 bg-white/[0.05] rounded-full"></div>
                 <div className="flex-1">
-                  <div className="h-3 bg-white/10 rounded w-32 mb-2"></div>
-                  <div className="h-4 bg-white/10 rounded w-full mb-2"></div>
-                  <div className="h-3 bg-white/5 rounded w-3/4"></div>
+                  <div className="h-3 bg-white/[0.05] rounded w-32 mb-2"></div>
+                  <div className="h-4 bg-white/[0.05] rounded w-full mb-2"></div>
+                  <div className="h-3 bg-white/[0.03] rounded w-3/4"></div>
                 </div>
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function ActivityFeed({ userId, className = '' }: ActivityFeedPro
     return (
       <div className={`space-y-4 ${className}`}>
         <h2 className="text-lg font-medium text-white">Activity Feed</h2>
-        <div className="bg-[#131315] border border-white/[0.1] rounded-lg p-8 text-center">
+        <div className="bg-transparent border border-white/[0.04] rounded-lg p-8 text-center">
           <p className="text-white/60">{error}</p>
         </div>
       </div>
@@ -162,7 +162,7 @@ export default function ActivityFeed({ userId, className = '' }: ActivityFeedPro
     return (
       <div className={`space-y-4 ${className}`}>
         <h2 className="text-lg font-medium text-white">Activity Feed</h2>
-        <div className="bg-[#131315] border border-white/[0.1] rounded-lg p-8 text-center">
+        <div className="bg-transparent border border-white/[0.04] rounded-lg p-8 text-center">
           <p className="text-white/60">
             {userId ? 'No recent activity' : 'Follow users to see their activity here'}
           </p>
@@ -181,11 +181,11 @@ export default function ActivityFeed({ userId, className = '' }: ActivityFeedPro
         {activities.map((activity) => (
           <div
             key={`${activity.type}-${activity.id}`}
-            className="bg-[#131315] border border-white/[0.05] rounded-lg p-4 hover:border-white/[0.1] transition-colors"
+            className="bg-transparent border border-white/[0.04] rounded-lg p-4 hover:bg-white/[0.02] transition-colors"
           >
             {/* Header */}
             <div className="flex items-start gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-[#1C1B1E] flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center overflow-hidden flex-shrink-0">
                 {activity.user.avatar_url ? (
                   <Image
                     src={activity.user.avatar_url}
@@ -265,7 +265,7 @@ export default function ActivityFeed({ userId, className = '' }: ActivityFeedPro
           <button
             onClick={handleLoadMore}
             disabled={isLoading}
-            className="px-4 py-2 bg-white/[0.05] border border-white/[0.1] text-white/60 hover:text-white hover:border-white/[0.2] rounded-lg text-sm transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-white/[0.03] border border-white/[0.06] text-white/60 hover:text-white hover:bg-white/[0.06] hover:border-white/[0.1] rounded-lg text-sm transition-colors disabled:opacity-50"
           >
             {isLoading ? 'Loading...' : 'Load More'}
           </button>

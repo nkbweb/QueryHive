@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         aiJob.triggerAIAnswerForQuestion(question.id).catch(error => {
           console.error('Background AI answer generation failed:', error)
         })
-        
+
         console.log(`AI answer generation triggered for question: ${question.id}`)
       } else {
         console.log(`User ${userId} has exceeded AI quota, skipping AI generation`)

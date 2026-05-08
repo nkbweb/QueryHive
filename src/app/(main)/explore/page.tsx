@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowBigUp, MessageSquare, Clock, ChevronRight, Search, Plus } from 'lucide-react'
 import ExploreSidebar from '@/components/explore/ExploreSidebar'
 import { useNavigationWithLoading } from '@/hooks/useNavigationWithLoading'
 
@@ -43,47 +45,45 @@ type Stats = {
   tagsCount: number
 }
 
+const TABS = [
+  { id: 'trending',    label: 'Trending' },
+  { id: 'recent',     label: 'Recent' },
+  { id: 'unanswered', label: 'Unanswered' },
+  { id: 'ai-answered',label: 'AI Answered' },
+  { id: 'most-viewed',label: 'Most Viewed' },
+] as const
+
+type TabId = typeof TABS[number]['id']
+
 export default function ExplorePage() {
   const { navigate } = useNavigationWithLoading()
 
-  const [activeTab, setActiveTab] = useState<
-    'trending' | 'recent' | 'unanswered' | 'ai-answered' | 'most-viewed'
-  >('trending')
-
-  const [questions, setQuestions] = useState<Question[]>([])
-  const [tags, setTags] = useState<Tag[]>([])
-  const [users, setUsers] = useState<User[]>([])
-  const [stats, setStats] = useState<Stats | null>(null)
-
+  const [activeTab, setActiveTab] = useState<TabId>('trending')
+  const [questions, setQuestions]  = useState<Question[]>([])
+  const [tags, setTags]            = useState<Tag[]>([])
+  const [users, setUsers]          = useState<User[]>([])
+  const [stats, setStats]          = useState<Stats | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading]      = useState(true)
   const [activeTagId, setActiveTagId] = useState<string | null>(null)
 
-  const handleQuestionClick = (e: React.MouseEvent, questionId: string) => {
-    e.preventDefault()
-    navigate(`/questions/${questionId}`)
-  }
-
+  /* ── data fetching ───────────────────────────────────────── */
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
       const endpoint = `/api/explore/${activeTab}`
-
       const [questionsRes, tagsRes, usersRes, statsRes] = await Promise.all([
         fetch(endpoint),
         fetch('/api/explore/tags?limit=15'),
         fetch('/api/explore/users?limit=5'),
         fetch('/api/explore/stats'),
       ])
-
-      const [questionsData, tagsData, usersData, statsData] =
-        await Promise.all([
-          questionsRes.json(),
-          tagsRes.json(),
-          usersRes.json(),
-          statsRes.json(),
-        ])
-
+      const [questionsData, tagsData, usersData, statsData] = await Promise.all([
+        questionsRes.json(),
+        tagsRes.json(),
+        usersRes.json(),
+        statsRes.json(),
+      ])
       setQuestions(questionsData.questions || [])
       setTags(tagsData.tags || [])
       setUsers(usersData.users || [])
@@ -95,23 +95,14 @@ export default function ExplorePage() {
     }
   }, [activeTab])
 
-  useEffect(() => {
-    fetchData()
-  }, [activeTab, fetchData])
+  useEffect(() => { fetchData() }, [activeTab, fetchData])
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!searchQuery.trim()) {
-      fetchData()
-      return
-    }
-
+    if (!searchQuery.trim()) { fetchData(); return }
     setLoading(true)
     try {
-      const res = await fetch(
-        `/api/explore/search?q=${encodeURIComponent(searchQuery)}`
-      )
+      const res = await fetch(`/api/explore/search?q=${encodeURIComponent(searchQuery)}`)
       const data = await res.json()
       setQuestions(data.questions || [])
     } catch (error) {
@@ -127,15 +118,9 @@ export default function ExplorePage() {
   }
 
   const handleTagClick = async (tagId: string) => {
-    if (activeTagId === tagId) {
-      setActiveTagId(null)
-      fetchData()
-      return
-    }
-
+    if (activeTagId === tagId) { setActiveTagId(null); fetchData(); return }
     setActiveTagId(tagId)
     setLoading(true)
-
     try {
       const res = await fetch(`/api/questions?tag=${tagId}`)
       const data = await res.json()
@@ -147,136 +132,196 @@ export default function ExplorePage() {
     }
   }
 
+  const handleQuestionClick = (e: React.MouseEvent, id: string) => {
+    e.preventDefault()
+    navigate(`/questions/${id}`)
+  }
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+
+  /* ── render ──────────────────────────────────────────────── */
   return (
-    <div className="flex h-full bg-[#08080A]">
+    <div className="flex h-full bg-[#050505]">
 
-      {/* MAIN */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      {/* ── MAIN ────────────────────────────────────────────── */}
+      <main className="flex-1 flex flex-col overflow-hidden border-x border-white/[0.05]">
 
-        {/* HEADER */}
-        <header className="px-6 pt-6 pb-3">
+        {/* Header — matches QuestionFeed header exactly */}
+        <header className="w-full px-4 pt-6 pb-2 border-b border-white/[0.05]">
 
-          <div className="flex items-center gap-3 mb-5">
-            <h1 className="text-base font-medium text-white">Explore</h1>
-
-            {stats && (
-              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white/[0.03] border border-white/[0.06] rounded">
-                <span className="w-1.5 h-1.5 bg-primary-container rounded-full animate-pulse" />
-                <span className="text-[10px] text-primary-container font-medium">
+          {/* Title row */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <h1 className="text-xl font-medium text-white tracking-tight">Explore</h1>
+              {stats && (
+                <span className="text-[11px] font-mono bg-white/[0.05] text-gray-500 px-2 py-0.5 rounded border border-white/[0.05]">
                   {stats.questionsCount} QUESTIONS
                 </span>
-              </div>
-            )}
+              )}
+            </div>
+            <button
+              onClick={() => navigate('/ask')}
+              className="sm:hidden flex items-center gap-2 bg-white text-black px-4 py-1.5 rounded text-sm font-semibold hover:bg-gray-200 transition-all active:scale-[0.98]"
+            >
+              <Plus size={16} />
+              Ask
+            </button>
           </div>
 
-          {/* SEARCH */}
-          <form onSubmit={handleSearch} className="mb-3">
+          {/* Search — styled to match the feed's monochrome terminal feel */}
+          <form onSubmit={handleSearch} className="relative mb-5">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none"
+            />
             <input
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Search questions..."
-              className="w-full px-3 py-2 bg-[#131315] border border-[#1C1B1E] rounded-md text-sm text-white placeholder:text-white/40 focus:border-primary-container outline-none"
+              placeholder="Search questions…"
+              className="w-full pl-8 pr-4 py-2 bg-white/[0.03] border border-white/[0.06] rounded text-sm text-white/80 placeholder:text-gray-600 focus:border-white/20 focus:bg-white/[0.05] outline-none transition"
             />
           </form>
 
-          {/* TABS */}
-          <div className="flex gap-5 border-b border-[#1C1B1E] overflow-x-auto no-scrollbar">
-
-            {['trending', 'recent', 'unanswered', 'ai-answered', 'most-viewed'].map(
-              (tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab as any)}
-                  className={`pb-2 text-[12px] font-medium border-b-2 transition ${
-                    activeTab === tab
-                      ? 'border-primary-container text-white'
-                      : 'border-transparent text-white/50 hover:text-white'
-                  }`}
-                >
-                  {tab.replace('-', ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
-                </button>
-              )
-            )}
+          {/* Tabs — identical to QuestionFeed tabs */}
+          <div className="flex gap-1 overflow-x-auto no-scrollbar">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => { setActiveTagId(null); setActiveTab(tab.id) }}
+                className={`relative px-3 py-2 text-xs font-medium transition-colors whitespace-nowrap ${
+                  activeTab === tab.id ? 'text-white' : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                {tab.label}
+                {activeTab === tab.id && (
+                  <motion.div
+                    layoutId="exploreTabBorder"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-white shadow-[0_-2px_6px_rgba(255,255,255,0.3)]"
+                  />
+                )}
+              </button>
+            ))}
           </div>
         </header>
 
-        {/* FEED */}
-        <div className="flex-1 overflow-y-auto no-scrollbar px-3">
-
-          {loading ? (
-            <div className="flex items-center justify-center h-24 text-white/40 text-sm">
-              Loading...
-            </div>
-          ) : questions.length === 0 ? (
-            <div className="flex items-center justify-center h-24 text-white/40 text-sm">
-              No questions found
-            </div>
-          ) : (
-            <div className="flex flex-col">
-
-              {questions.map((q) => (
-                <Link
-                  key={q.id}
-                  href={`/questions/${q.id}`}
-                  onClick={(e) => handleQuestionClick(e, q.id)}
-                  className="group flex gap-3 px-3 py-2.5 border-b border-white/[0.04] hover:bg-white/[0.015] transition"
-                >
-
-                  {/* VOTES */}
-                  <div className="hidden md:flex flex-col items-center w-7 text-white/40 group-hover:text-[#E8FF47] transition">
-                    <span className="text-[9px]">▲</span>
-                    <span className="text-xs">{q.upvotes}</span>
-                  </div>
-
-                  {/* CONTENT */}
-                  <div className="flex-1 min-w-0">
-
-                    <h3 className="text-[13.5px] font-medium text-white group-hover:text-[#E8FF47] line-clamp-1">
-                      {q.title}
-                    </h3>
-
-                    <div className="flex items-center gap-2 text-[10.5px] text-white/40 mt-0.5">
-                      <span className="text-white/60">{q.username}</span>
-                      <span>•</span>
-                      <span>{q.answerCount} answers</span>
-                      <span>•</span>
-                      <span>{q.createdAt}</span>
+        {/* Question List — pixel-perfect match to QuestionFeed */}
+        <div className="flex-1 overflow-y-auto no-scrollbar">
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <LoadingSkeleton />
+            ) : questions.length === 0 ? (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center justify-center gap-3 h-48 text-gray-600"
+              >
+                <Search size={28} strokeWidth={1.5} />
+                <span className="text-sm">No questions found</span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={activeTab + activeTagId}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                {questions.map((q) => (
+                  <Link
+                    key={q.id}
+                    href={`/questions/${q.id}`}
+                    onClick={(e) => handleQuestionClick(e, q.id)}
+                    className="group flex items-center w-full px-4 py-3 border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors gap-6 min-w-0"
+                  >
+                    {/* Stats column */}
+                    <div className="flex items-center gap-2 sm:gap-4 min-w-[40px] sm:min-w-[100px]">
+                      <div className="flex items-center gap-1.5 min-w-[40px]">
+                        <ArrowBigUp
+                          size={16}
+                          className={q.upvotes > 0 ? 'text-orange-500' : 'text-gray-700'}
+                        />
+                        <span className={`text-xs font-mono ${q.upvotes > 0 ? 'text-gray-200' : 'text-gray-600'}`}>
+                          {q.upvotes}
+                        </span>
+                      </div>
+                      <div className="hidden sm:flex items-center gap-1.5">
+                        <MessageSquare
+                          size={14}
+                          className={q.answerCount > 0 ? 'text-blue-500' : 'text-gray-700'}
+                        />
+                        <span className="text-xs font-mono text-gray-600">{q.answerCount}</span>
+                      </div>
                     </div>
 
-                    {/* TAGS */}
-                    {q.tags.length > 0 && (
-                      <div className="flex gap-1 flex-wrap mt-1.5">
-                        {q.tags.map((tag, idx) => {
-                          const colors = [
-                            'text-cyan-300 bg-cyan-500/10 border-cyan-400/20 hover:bg-cyan-500/15',
-                            'text-lime-300 bg-lime-500/10 border-lime-400/20 hover:bg-lime-500/15',
-                            'text-purple-300 bg-purple-500/10 border-purple-400/20 hover:bg-purple-500/15',
-                            'text-pink-300 bg-pink-500/10 border-pink-400/20 hover:bg-pink-500/15',
-                            'text-amber-300 bg-amber-500/10 border-amber-400/20 hover:bg-amber-500/15',
-                          ]
+                    {/* Title + tags */}
+                    <div className="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-4 min-w-0">
+                      <h2 className="text-sm text-gray-300 group-hover:text-white transition-colors truncate">
+                        {q.title}
+                      </h2>
 
+                      {/* Inline Tags - High-End Minimalist Design */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {q.tags?.slice(0, 3).map((tag: any, i: number) => {
+                          const colors = [
+                            { text: '#22d3ee', glow: 'rgba(34, 211, 238, 0.4)' }, // cyan
+                            { text: '#a3e635', glow: 'rgba(163, 230, 53, 0.4)' }, // lime
+                            { text: '#c084fc', glow: 'rgba(192, 132, 252, 0.4)' }, // purple
+                            { text: '#f472b6', glow: 'rgba(244, 114, 182, 0.4)' }, // pink
+                            { text: '#fbbf24', glow: 'rgba(251, 191, 36, 0.4)' }, // amber
+                          ]
+                          const color = colors[i % colors.length]
                           return (
                             <span
-                              key={tag.id}
-                              className={`px-2 py-[1px] text-[9.5px] rounded border ${colors[idx % colors.length]} transition`}
+                              key={i}
+                              className="relative group/tag flex items-center px-2 py-0.5 rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.03]"
                             >
-                              {tag.name}
+                              {/* Subtle Glass Background */}
+                              <div className="absolute inset-0 bg-white/[0.03] border border-white/[0.08] rounded-full group-hover/tag:bg-white/[0.06] group-hover/tag:border-white/[0.15] transition-all" />
+                              
+                              {/* Left Accent Dot */}
+                              <div 
+                                className="w-1 h-1 rounded-full mr-1.5 transition-all duration-300 group-hover/tag:scale-125"
+                                style={{ 
+                                  backgroundColor: color.text,
+                                  boxShadow: `0 0 4px ${color.glow}`
+                                }} 
+                              />
+
+                              {/* Tag Label */}
+                              <span 
+                                className="relative text-[10px] font-semibold tracking-wide transition-colors duration-300 text-gray-400 group-hover/tag:text-white"
+                                style={{ textTransform: 'uppercase' }}
+                              >
+                                {tag.name || tag}
+                              </span>
                             </span>
                           )
                         })}
                       </div>
-                    )}
+                    </div>
 
-                  </div>
-                </Link>
-              ))}
-
-            </div>
-          )}
+                    {/* Date + chevron */}
+                    <div className="flex items-center gap-4 flex-shrink-0">
+                      <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-gray-600 font-mono">
+                        <Clock size={12} />
+                        <span>{formatDate(q.createdAt)}</span>
+                      </div>
+                      <ChevronRight
+                        size={14}
+                        className="text-gray-800 group-hover:text-gray-400 transition-all group-hover:translate-x-0.5"
+                      />
+                    </div>
+                  </Link>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </main>
 
-      {/* SIDEBAR */}
+      {/* ── SIDEBAR ─────────────────────────────────────────── */}
       <div className="hidden lg:block">
         <ExploreSidebar
           tags={tags}
@@ -288,5 +333,26 @@ export default function ExplorePage() {
       </div>
 
     </div>
+  )
+}
+
+/* Loading skeleton — identical to QuestionFeed's LoadingSkeleton */
+function LoadingSkeleton() {
+  return (
+    <motion.div
+      key="skeleton"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="w-full"
+    >
+      {[...Array(10)].map((_, i) => (
+        <div key={i} className="w-full h-12 border-b border-white/[0.03] flex items-center px-4 gap-6">
+          <div className="w-16 h-3 bg-white/[0.05] animate-pulse rounded" />
+          <div className="flex-1 h-3 bg-white/[0.05] animate-pulse rounded" />
+          <div className="w-20 h-3 bg-white/[0.05] animate-pulse rounded" />
+        </div>
+      ))}
+    </motion.div>
   )
 }

@@ -11,9 +11,7 @@
   }
   
   body {
-    background-color: #08080A;
-    background-image: radial-gradient(#ffffff0a 1px, transparent 1px);
-    background-size: 24px 24px;
+    background-color: #0a0a0a;
   }
   
   .lime-line {

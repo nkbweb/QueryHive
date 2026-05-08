@@ -4,18 +4,38 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
+interface Tag {
+  id: string
+  name: string
+  questionsCount?: number
+}
+
+interface User {
+  id: string
+  username: string
+  avatar_url?: string
+  avatarUrl?: string
+  reputation?: number
+}
+
+interface Question {
+  id: string
+  title: string
+  answersCount: number
+}
+
 export default function RightSidebar() {
-  const [tags, setTags] = useState<any[]>([])
-  const [users, setUsers] = useState<any[]>([])
-  const [unansweredQuestions, setUnansweredQuestions] = useState<any[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
+  const [users, setUsers] = useState<User[]>([])
+  const [unansweredQuestions, setUnansweredQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [tagsRes, usersRes, questionsRes] = await Promise.all([
-          fetch('/api/explore/tags?limit=5'),
-          fetch('/api/explore/users?limit=3'),
+          fetch('/api/explore/tags?limit=6'),
+          fetch('/api/explore/users?limit=5'),
           fetch('/api/questions?sort=unanswered&limit=3')
         ])
 
@@ -25,7 +45,6 @@ export default function RightSidebar() {
           questionsRes.json()
         ])
 
-        console.log('Users data:', usersData.users)
         setTags(tagsData.tags || [])
         setUsers(usersData.users || [])
         setUnansweredQuestions(questionsData.questions || [])
@@ -39,141 +58,220 @@ export default function RightSidebar() {
     fetchData()
   }, [])
 
-  const getInitials = (username: string) => {
-    return username.slice(0, 2).toUpperCase()
-  }
-
   const formatScore = (score: number) => {
+    if (score >= 1000000) return `${(score / 1000000).toFixed(1)}M`
     if (score >= 1000) return `${(score / 1000).toFixed(1)}k`
     return score.toString()
   }
 
-  const tagColors = [
-    'from-orange-400/20 to-red-400/20',
-    'from-pink-400/20 to-purple-400/20',
-    'from-green-400/20 to-emerald-400/20',
-    'from-purple-400/20 to-indigo-400/20',
-    'from-blue-400/20 to-cyan-400/20'
-  ]
+  const getInitials = (username: string) => {
+    return username.slice(0, 2).toUpperCase()
+  }
 
   if (loading) {
     return (
-      <aside className="hidden lg:block w-[240px] h-screen border-l border-surface-container-low p-4 flex flex-col gap-6 overflow-hidden">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-surface-container-high/30 rounded" />
-          <div className="h-3 bg-surface-container-high/20 rounded w-3/4" />
-          <div className="h-3 bg-surface-container-high/20 rounded w-1/2" />
+      <aside className="w-80 h-[calc(100vh-56px)] border-l border-white/[0.05] bg-[#050505] p-6">
+        <div className="space-y-6">
+          <div className="animate-pulse">
+            <div className="h-4 bg-white/[0.05] rounded w-1/3 mb-4" />
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-12 bg-white/[0.03] rounded" />
+              ))}
+            </div>
+          </div>
+          <div className="animate-pulse">
+            <div className="h-4 bg-white/[0.05] rounded w-1/4 mb-4" />
+            <div className="flex flex-wrap gap-2">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-8 w-20 bg-white/[0.03] rounded-full" />
+              ))}
+            </div>
+          </div>
         </div>
       </aside>
     )
   }
 
   return (
-    <aside className="w-[360px] h-[calc(100vh-56px)] border-l border-surface-container-low p-4 flex flex-col gap-6 overflow-hidden pointer-events-auto">
-      {/* Needs Human Answers */}
-      {unansweredQuestions.length > 0 && (
-        <section className="relative">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-1 h-4 bg-gradient-to-b from-lime-accent to-emerald-400 rounded-full" />
-            <h3 className="text-[11px] font-bold text-white/40 uppercase tracking-wider">Needs Answer</h3>
-          </div>
-          <div className="flex flex-col gap-3">
-            {unansweredQuestions.slice(0, 3).map((q: any, i: number) => (
-              <Link
-                key={q.id}
-                href={`/questions/${q.id}`}
-                className="group flex flex-col gap-1.5 p-2.5 rounded-lg bg-surface-container-high/30 border border-surface-container-high/50 hover:border-lime-accent/30 hover:bg-surface-container-high/50 transition-all duration-200 cursor-pointer relative overflow-hidden"
+    <aside className="w-80 h-[calc(100vh-56px)] border-l border-white/[0.05] bg-[#050505] overflow-y-auto overflow-x-hidden no-scrollbar pointer-events-auto">
+      <div className="p-6 space-y-8">
+        
+        {/* Top Contributors */}
+        {users.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-sm font-medium text-white tracking-tight">Top Contributors</h3>
+              <Link 
+                href="/leaderboard" 
+                className="text-xs text-gray-500 hover:text-gray-300 font-medium transition-colors"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-lime-accent/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <p className="text-[11px] text-white/70 line-clamp-2 leading-snug group-hover:text-white transition-colors relative z-10">{q.title}</p>
-                <div className="flex items-center justify-between relative z-10">
-                  <span className="text-[9px] font-medium text-lime-accent">
-                    {q.answersCount === 0 ? 'NEW' : `${q.answersCount} ANSWERS`}
-                  </span>
-                  <span className="text-[10px] text-lime-accent font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
-                    Answer <span className="material-symbols-outlined text-[12px]">arrow_forward</span>
-                  </span>
-                </div>
+                Full list
               </Link>
-            ))}
-          </div>
-        </section>
-      )}
+            </div>
+            <div className="space-y-1">
+              {users.map((user, index) => (
+                <Link
+                  key={user.id}
+                  href={`/profile/${user.username}`}
+                  className="group flex items-center w-full px-4 py-3 border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors gap-1.5 min-w-0"
+                >
+                  {/* Rank */}
+                  <div className="flex items-center">
+                    <span className="text-xs font-mono text-gray-600">
+                      {index + 1}
+                    </span>
+                  </div>
 
-      {/* Hot Tags */}
-      {tags.length > 0 && (
-        <section>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-1 h-4 bg-gradient-to-b from-emerald-400 to-cyan-400 rounded-full" />
-            <h3 className="text-[11px] font-bold text-white/40 uppercase tracking-wider">Hot Tags</h3>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {tags.map((tag: any, i: number) => (
-              <Link
-                key={tag.id}
-                href={`/explore?tag=${tag.id}`}
-                className={`px-2.5 py-1 bg-gradient-to-r ${tagColors[i % tagColors.length]} border border-white/10 rounded-full text-[10px] font-medium text-white/70 hover:text-white hover:border-white/30 transition-all cursor-pointer`}
-              >
-                {tag.name}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Top Contributors */}
-      {users.length > 0 && (
-        <section>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-1 h-4 bg-gradient-to-b from-cyan-400 to-blue-400 rounded-full" />
-            <h3 className="text-[11px] font-bold text-white/40 uppercase tracking-wider">Top Contributors</h3>
-          </div>
-          <div className="flex flex-col gap-2">
-            {users.map((user: any, i: number) => (
-              <Link
-                key={user.id}
-                href={`/profile/${user.username}`}
-                className="flex items-center justify-between p-2 rounded-lg bg-surface-container-high/30 border border-surface-container-high/50 hover:border-lime-accent/30 hover:bg-surface-container-high/50 transition-all duration-200 group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-6 h-6 rounded-lg overflow-hidden bg-[#1a1a1f] flex-shrink-0">
-                    {user.avatar_url || user.avatarUrl ? (
+                  {/* Avatar */}
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-white/[0.05] border border-white/[0.08] flex-shrink-0">
+                    {(user.avatar_url || user.avatarUrl) ? (
                       <Image
-                        src={user.avatar_url || user.avatarUrl}
+                        src={user.avatar_url || user.avatarUrl!}
                         alt={user.username}
-                        width={24}
-                        height={24}
+                        width={32}
+                        height={32}
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className={`w-full h-full flex items-center justify-center text-[9px] font-bold ${
-                        i === 0 ? 'bg-gradient-to-br from-yellow-400 to-orange-400 text-black' :
-                        i === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-black' :
-                        'bg-gradient-to-br from-amber-600 to-amber-700 text-white'
-                      }`}>
+                      <div className="w-full h-full flex items-center justify-center text-xs font-medium text-gray-600">
                         {getInitials(user.username)}
                       </div>
                     )}
                   </div>
-                  <span className="text-[11px] text-white/70 group-hover:text-white transition-colors">{user.username}</span>
-                </div>
-                <span className={`text-[10px] font-semibold ${
-                  i === 0 ? 'text-lime-accent' :
-                  i === 1 ? 'text-white/60' :
-                  'text-white/40'
-                }`}>{formatScore(user.reputation || 0)}</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
 
-      {/* Footer */}
-      <div className="mt-auto pt-4 border-t border-surface-container-low">
-        <div className="p-3 rounded-lg bg-gradient-to-br from-lime-accent/5 to-emerald-500/5 border border-lime-accent/10">
-          <div className="text-[10px] font-medium text-white/40 flex flex-col gap-0.5">
-            <span className="text-lime-accent">QUERYHIVE V2.4.1</span>
-            <span>{'\u00a9'} 2024 TERMINAL AUTHORITY</span>
+                  {/* Name & Reputation */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-300 group-hover:text-white transition-colors truncate">
+                      {user.username}
+                    </p>
+                    {user.reputation !== undefined && (
+                      <p className="text-xs text-gray-600">
+                        {formatScore(user.reputation)} rep
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="flex items-center gap-4 flex-shrink-0">
+                    <span className="text-gray-800 group-hover:text-gray-400 transition-all group-hover:translate-x-0.5">
+                      →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Popular Tags */}
+        {tags.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-sm font-medium text-white tracking-tight">Popular Tags</h3>
+              <Link 
+                href="/explore" 
+                className="text-xs text-gray-500 hover:text-gray-300 font-medium transition-colors"
+              >
+                Explore
+              </Link>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {tags.map((tag, i) => {
+                const colors = [
+                  { text: '#22d3ee', glow: 'rgba(34, 211, 238, 0.4)' }, // cyan
+                  { text: '#a3e635', glow: 'rgba(163, 230, 53, 0.4)' }, // lime
+                  { text: '#c084fc', glow: 'rgba(192, 132, 252, 0.4)' }, // purple
+                  { text: '#f472b6', glow: 'rgba(244, 114, 182, 0.4)' }, // pink
+                  { text: '#fbbf24', glow: 'rgba(251, 191, 36, 0.4)' }, // amber
+                ]
+                const color = colors[i % colors.length]
+                return (
+                  <Link
+                    key={tag.id}
+                    href={`/explore?tag=${tag.id}`}
+                    className="relative group/tag flex items-center px-2 py-0.5 rounded-full overflow-hidden transition-all duration-300 hover:scale-[1.03]"
+                  >
+                    {/* Subtle Glass Background */}
+                    <div className="absolute inset-0 bg-white/[0.03] border border-white/[0.08] rounded-full group-hover/tag:bg-white/[0.06] group-hover/tag:border-white/[0.15] transition-all" />
+                    
+                    {/* Left Accent Dot */}
+                    <div 
+                      className="w-1 h-1 rounded-full mr-1.5 transition-all duration-300 group-hover/tag:scale-125"
+                      style={{ 
+                        backgroundColor: color.text,
+                        boxShadow: `0 0 4px ${color.glow}`
+                      }} 
+                    />
+
+                    {/* Tag Label */}
+                    <span 
+                      className="relative text-[10px] font-semibold tracking-wide transition-colors duration-300 text-gray-400 group-hover/tag:text-white"
+                      style={{ textTransform: 'uppercase' }}
+                    >
+                      {tag.name}
+                    </span>
+                    {tag.questionsCount && (
+                      <span className="text-[9px] text-gray-600 ml-1">
+                        {formatScore(tag.questionsCount)}
+                      </span>
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* Unanswered Questions */}
+        {unansweredQuestions.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-sm font-medium text-white tracking-tight">Unanswered Questions</h3>
+              <Link 
+                href="/explore" 
+                className="text-xs text-gray-500 hover:text-gray-300 font-medium transition-colors"
+              >
+                View all
+              </Link>
+            </div>
+            <div className="space-y-1">
+              {unansweredQuestions.map((question) => (
+                <Link
+                  key={question.id}
+                  href={`/questions/${question.id}`}
+                  className="group flex items-center w-full px-4 py-3 border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors gap-6 min-w-0"
+                >
+                  {/* Title */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm text-gray-300 group-hover:text-white transition-colors truncate">
+                      {question.title}
+                    </h4>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="flex items-center gap-4 flex-shrink-0">
+                    <span className="text-gray-800 group-hover:text-gray-400 transition-all group-hover:translate-x-0.5">
+                      →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Footer */}
+        <div className="pt-6 border-t border-white/[0.05]">
+          <div className="text-center">
+            <h4 className="text-sm font-medium text-white tracking-tight mb-2">QueryHive</h4>
+            <div className="flex justify-center gap-4 text-xs text-gray-600 mb-2">
+              <a href="#" className="hover:text-gray-300 transition-colors">About</a>
+              <a href="#" className="hover:text-gray-300 transition-colors">Privacy</a>
+              <a href="#" className="hover:text-gray-300 transition-colors">Terms</a>
+              <a href="#" className="hover:text-gray-300 transition-colors">Help</a>
+            </div>
+            <p className="text-xs text-gray-700">© 2024 QueryHive</p>
           </div>
         </div>
       </div>
