@@ -48,6 +48,9 @@ export default function Markdown({ content, className = '' }: MarkdownProps) {
         for (let j = 0; j < lines.length; j++) {
           const line = lines[j].trim()
           
+          // Skip empty lines
+          if (!line) continue
+          
           // Handle horizontal rules (--- or ***)
           if (line === '---' || line === '***') {
             elements.push(
@@ -75,6 +78,34 @@ export default function Markdown({ content, className = '' }: MarkdownProps) {
               )
               continue
             }
+          }
+          
+          // Handle bullet points (-, *, +)
+          if (line.startsWith('-') || line.startsWith('*') || line.startsWith('+')) {
+            const bulletText = line.substring(1).trim()
+            if (bulletText) {
+              elements.push(
+                <div key={`bullet-${i}-${j}`} className="mb-2 ml-6 flex items-start">
+                  <span className="text-lime-accent mr-2">•</span>
+                  <span className="text-white/90">{processInlineCode(bulletText, `bullet-${i}-${j}`)}</span>
+                </div>
+              )
+            }
+            continue
+          }
+          
+          // Handle numbered lists (1. 2. 3. etc.)
+          if (/^\d+\.\s/.test(line)) {
+            const numberedText = line.replace(/^\d+\.\s/, '').trim()
+            if (numberedText) {
+              elements.push(
+                <div key={`numbered-${i}-${j}`} className="mb-2 ml-6 flex items-start">
+                  <span className="text-lime-accent mr-2 font-mono text-sm">{line.match(/^\d+/)?.[0]}.</span>
+                  <span className="text-white/90">{processInlineCode(numberedText, `numbered-${i}-${j}`)}</span>
+                </div>
+              )
+            }
+            continue
           }
           
           // Handle regular paragraphs

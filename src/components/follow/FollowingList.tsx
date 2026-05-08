@@ -63,7 +63,7 @@ export default function FollowingList({ currentUserId }: FollowingListProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-surface-container border border-surface-container-high rounded-xl p-6">
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white flex items-center gap-2">
             <span className="material-symbols-outlined text-[20px] text-lime-accent" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -75,10 +75,10 @@ export default function FollowingList({ currentUserId }: FollowingListProps) {
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex items-center gap-3 animate-pulse">
-              <div className="w-10 h-10 bg-surface rounded-full"></div>
+              <div className="w-10 h-10 bg-white/[0.04] rounded-full"></div>
               <div className="flex-1">
-                <div className="h-3 bg-surface rounded w-24 mb-1"></div>
-                <div className="h-2 bg-surface-container rounded w-16"></div>
+                <div className="h-3 bg-white/[0.04] rounded w-24 mb-1"></div>
+                <div className="h-2 bg-white/[0.02] rounded w-16"></div>
               </div>
             </div>
           ))}
@@ -89,7 +89,7 @@ export default function FollowingList({ currentUserId }: FollowingListProps) {
 
   if (following.length === 0) {
     return (
-      <div className="bg-surface-container border border-surface-container-high rounded-xl p-6">
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white flex items-center gap-2">
             <span className="material-symbols-outlined text-[20px] text-lime-accent" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -108,14 +108,14 @@ export default function FollowingList({ currentUserId }: FollowingListProps) {
   }
 
   return (
-    <div className="bg-surface-container border border-surface-container-high rounded-xl p-6">
+    <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white flex items-center gap-2">
           <span className="material-symbols-outlined text-[20px] text-lime-accent" style={{ fontVariationSettings: "'FILL' 1" }}>
             people
           </span>
           People You Follow
-          <span className="text-xs text-white/40 bg-surface-container px-2 py-1 rounded-full">
+          <span className="text-xs text-white/40 bg-white/[0.04] px-2 py-1 rounded-full">
             {following.length}
           </span>
         </h3>
@@ -132,7 +132,7 @@ export default function FollowingList({ currentUserId }: FollowingListProps) {
                 height={40}
                 className="w-10 h-10 rounded-full object-cover"
               />
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-lime-accent rounded-full border-2 border-surface-container"></div>
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-lime-accent rounded-full border-2 border-[#131315]"></div>
             </div>
             
             <div className="flex-1 min-w-0">
@@ -168,7 +168,7 @@ export default function FollowingList({ currentUserId }: FollowingListProps) {
 
       {/* Load More Button - Only show on mobile and if there are more users */}
       {following.length > 3 && (
-        <div className="mt-4 pt-4 border-t border-surface-container-high">
+        <div className="mt-4 pt-4 border-t border-white/[0.06]">
           <button
             onClick={() => setShowAll(!showAll)}
             className="w-full px-4 py-2 text-sm text-lime-accent bg-lime-accent/10 border border-lime-accent/20 rounded-lg hover:bg-lime-accent/20 transition-colors"

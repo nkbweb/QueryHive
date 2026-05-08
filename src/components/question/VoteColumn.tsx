@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getUserVote, updateVote } from '@/lib/queries/votes'
-import { ChevronUp, ChevronDown, Bookmark } from 'lucide-react'
+import { ArrowBigUp, ArrowBigDown, Bookmark } from 'lucide-react'
 import LoginPopup from '@/components/auth/LoginPopup'
 
 interface VoteColumnProps {
@@ -136,18 +136,21 @@ export default function VoteColumn({
       <button
         onClick={() => handleVote(1)}
         disabled={isVoting}
-        className={`group p-1 transition-all duration-150 ${
-          currentUserVote === 1 ? 'text-lime-accent' : 'text-white/25 hover:text-white/60'
+        className={`group p-1 transition-all duration-200 ${
+          currentUserVote === 1 ? 'text-[#E8FF47]' : 'text-white/30 hover:text-[#E8FF47]/70'
         } ${isVoting ? 'opacity-40 cursor-wait' : ''}`}
         title="Upvote"
       >
-        <ChevronUp className="w-10 h-10 transition-transform group-hover:scale-110 block" />
+        <ArrowBigUp 
+          className="w-7 h-7 transition-all duration-200 group-hover:scale-110 group-hover:-translate-y-0.5 block"
+          strokeWidth={1.5}
+        />
       </button>
 
       {/* Count */}
-      <span className={`font-mono font-semibold text-base leading-none tabular-nums select-none transition-colors duration-150 ${
-        currentUserVote === 1 ? 'text-lime-accent' :
-        currentUserVote === -1 ? 'text-error' :
+      <span className={`font-mono font-semibold text-base leading-none tabular-nums select-none transition-colors duration-200 ${
+        currentUserVote === 1 ? 'text-[#E8FF47]' :
+        currentUserVote === -1 ? 'text-red-400' :
         'text-white/50'
       }`}>
         {upvotes}
@@ -157,27 +160,35 @@ export default function VoteColumn({
       <button
         onClick={() => handleVote(-1)}
         disabled={isVoting}
-        className={`group p-1 transition-all duration-150 ${
-          currentUserVote === -1 ? 'text-error' : 'text-white/25 hover:text-white/60'
+        className={`group p-1 transition-all duration-200 ${
+          currentUserVote === -1 ? 'text-red-400' : 'text-white/30 hover:text-red-400/70'
         } ${isVoting ? 'opacity-40 cursor-wait' : ''}`}
         title="Downvote"
       >
-        <ChevronDown className="w-10 h-10 transition-transform group-hover:scale-110 block" />
+        <ArrowBigDown 
+          className="w-7 h-7 transition-all duration-200 group-hover:scale-110 group-hover:translate-y-0.5 block"
+          strokeWidth={1.5}
+        />
       </button>
 
       {/* Divider */}
-      <div className="w-4 h-px bg-white/[0.08] my-3" />
+      <div className="w-6 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-3" />
 
       {/* Bookmark */}
       <button
         onClick={handleBookmark}
         disabled={isBookmarking}
-        className={`group p-1 transition-all duration-150 ${
-          isBookmarked ? 'text-white/70' : 'text-white/25 hover:text-white/60'
+        className={`group p-1.5 rounded-lg transition-all duration-200 ${
+          isBookmarked 
+            ? 'text-[#E8FF47] bg-[#E8FF47]/10' 
+            : 'text-white/30 hover:text-white/70 hover:bg-white/5'
         } ${isBookmarking ? 'opacity-40 cursor-wait' : ''}`}
         title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
       >
-        <Bookmark className={`w-6 h-6 transition-transform group-hover:scale-110 block ${isBookmarked ? 'fill-current' : ''}`} />
+        <Bookmark 
+          className={`w-4 h-4 transition-all duration-200 group-hover:scale-110 block ${isBookmarked ? 'fill-current' : ''}`} 
+          strokeWidth={1.5}
+        />
       </button>
 
       {/* Login Popup */}

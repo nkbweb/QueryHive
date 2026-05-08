@@ -53,7 +53,7 @@ export async function getTrendingQuestions(limit = 20, offset = 0) {
     views: q.views || 0,
     upvotes: q.upvotes || 0,
     answerCount: q.answer_count || 0,
-    createdAt: formatTime(q.created_at),
+    createdAt: q.created_at,
     username: q.profiles?.username || 'Unknown',
     tags: (q.question_tags || [])
       .filter((qt: any) => qt.tags)
@@ -104,7 +104,7 @@ export async function getRecentQuestions(limit = 20, offset = 0) {
     views: q.views || 0,
     upvotes: q.upvotes || 0,
     answerCount: q.answer_count || 0,
-    createdAt: formatTime(q.created_at),
+    createdAt: q.created_at,
     username: q.profiles?.username || 'Unknown',
     tags: (q.question_tags || [])
       .filter((qt: any) => qt.tags)
@@ -156,7 +156,7 @@ export async function getUnansweredQuestions(limit = 20, offset = 0) {
     views: q.views || 0,
     upvotes: q.upvotes || 0,
     answerCount: 0,
-    createdAt: formatTime(q.created_at),
+    createdAt: q.created_at,
     username: q.profiles?.username || 'Unknown',
     tags: (q.question_tags || [])
       .filter((qt: any) => qt.tags)
@@ -213,7 +213,7 @@ export async function getAIAnsweredQuestions(limit = 20, offset = 0) {
     views: q.views || 0,
     upvotes: q.upvotes || 0,
     answerCount: q.answer_count || 0,
-    createdAt: formatTime(q.created_at),
+    createdAt: q.created_at,
     username: q.profiles?.username || 'Unknown',
     tags: (q.question_tags || [])
       .filter((qt: any) => qt.tags)
@@ -264,7 +264,7 @@ export async function getMostViewedQuestions(limit = 20, offset = 0) {
     views: q.views || 0,
     upvotes: q.upvotes || 0,
     answerCount: q.answer_count || 0,
-    createdAt: formatTime(q.created_at),
+    createdAt: q.created_at,
     username: q.profiles?.username || 'Unknown',
     tags: (q.question_tags || [])
       .filter((qt: any) => qt.tags)
@@ -394,7 +394,7 @@ export async function searchQuestions(query: string, limit = 20, offset = 0) {
     views: q.views || 0,
     upvotes: q.upvotes || 0,
     answerCount: q.answer_count || 0,
-    createdAt: formatTime(q.created_at),
+    createdAt: q.created_at,
     username: q.profiles?.username || 'Unknown',
     tags: (q.question_tags || [])
       .filter((qt: any) => qt.tags)
@@ -446,7 +446,7 @@ export async function getQuestionsByTag(tagId: string, limit = 20, offset = 0) {
     views: q.views || 0,
     upvotes: q.upvotes || 0,
     answerCount: q.answer_count || 0,
-    createdAt: formatTime(q.created_at),
+    createdAt: q.created_at,
     username: q.profiles?.username || 'Unknown',
     tags: (q.question_tags || [])
       .filter((qt: any) => qt.tags)

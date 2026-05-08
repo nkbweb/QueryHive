@@ -130,11 +130,29 @@ export default function Home() {
                     <span className="text-[14px] text-white font-medium">{question.title}</span>
                     {question.tags.length > 0 && (
                       <div className="hidden md:flex gap-2">
-                        {question.tags.slice(0, 2).map((tag: Tag) => (
-                          <span key={tag.id} className="text-[11px] text-white font-mono bg-surface-container-high border border-outline px-2 py-0.5 rounded">
-                            #{tag.name}
-                          </span>
-                        ))}
+                        {question.tags.slice(0, 2).map((tag: Tag, idx: number) => {
+                          const tagColors = [
+                            { text: '#67e8f9', bg: 'rgba(6, 182, 212, 0.07)', border: 'rgba(34, 211, 238, 0.15)' }, // cyan
+                            { text: '#bef264', bg: 'rgba(132, 204, 22, 0.07)', border: 'rgba(163, 230, 53, 0.15)' }, // lime
+                            { text: '#d8b4fe', bg: 'rgba(168, 85, 247, 0.07)', border: 'rgba(192, 132, 252, 0.15)' }, // purple
+                            { text: '#f9a8d4', bg: 'rgba(236, 72, 153, 0.07)', border: 'rgba(244, 114, 182, 0.15)' }, // pink
+                            { text: '#fcd34d', bg: 'rgba(245, 158, 11, 0.07)', border: 'rgba(251, 191, 36, 0.15)' }, // amber
+                          ]
+                          const color = tagColors[idx % tagColors.length]
+                          return (
+                            <span
+                              key={tag.id}
+                              className="px-2 py-0.5 border text-[10px] rounded font-medium transition-colors"
+                              style={{
+                                color: color.text,
+                                backgroundColor: color.bg,
+                                borderColor: color.border
+                              }}
+                            >
+                              {tag.name}
+                            </span>
+                          )
+                        })}
                       </div>
                     )}
                   </div>

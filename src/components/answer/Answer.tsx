@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getUserVote, updateVote } from '@/lib/queries/votes'
-import { ChevronUp, ChevronDown, MessageCircle } from 'lucide-react'
+import { ArrowBigUp, ArrowBigDown, MessageCircle } from 'lucide-react'
 import Comment from './Comment'
 import CommentForm from './CommentForm'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
@@ -238,38 +238,57 @@ export default function Answer({ answer, isAccepted = false }: AnswerProps) {
         </div>
 
         {/* Votes and Comments - Properly aligned */}
-        <div className="flex items-center gap-4 sm:gap-3">
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* Upvote */}
           <button
             onClick={() => handleVote(1)}
             disabled={isVoting}
-            className={`flex items-center gap-1 transition-colors duration-150 ${
-              currentUserVote === 1 ? 'text-lime-accent' : 'text-white/25 hover:text-white/60'
-            }`}
+            className={`group flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-200 ${
+              currentUserVote === 1 
+                ? 'text-[#E8FF47] bg-[#E8FF47]/10' 
+                : 'text-white/30 hover:text-[#E8FF47]/70 hover:bg-white/5'
+            } ${isVoting ? 'opacity-40 cursor-wait' : ''}`}
           >
-            <ChevronUp className="w-6 h-6 sm:w-8 sm:h-8" />
-            <span className="text-[11px] font-mono tabular-nums">{upvotes}</span>
+            <ArrowBigUp 
+              className="w-5 h-5 transition-all duration-200 group-hover:scale-110" 
+              strokeWidth={1.5}
+            />
+            <span className={`text-[11px] font-mono font-semibold tabular-nums transition-colors duration-200 ${
+              currentUserVote === 1 ? 'text-[#E8FF47]' : 'text-white/50'
+            }`}>{upvotes}</span>
           </button>
 
+          {/* Downvote */}
           <button
             onClick={() => handleVote(-1)}
             disabled={isVoting}
-            className={`flex items-center gap-1 transition-colors duration-150 ${
-              currentUserVote === -1 ? 'text-error' : 'text-white/25 hover:text-white/60'
-            }`}
+            className={`group flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-200 ${
+              currentUserVote === -1 
+                ? 'text-red-400 bg-red-400/10' 
+                : 'text-white/30 hover:text-red-400/70 hover:bg-white/5'
+            } ${isVoting ? 'opacity-40 cursor-wait' : ''}`}
           >
-            <ChevronDown className="w-6 h-6 sm:w-8 sm:h-8" />
-            <span className="text-[11px] font-mono tabular-nums">{downvotes}</span>
+            <ArrowBigDown 
+              className="w-5 h-5 transition-all duration-200 group-hover:scale-110" 
+              strokeWidth={1.5}
+            />
+            <span className={`text-[11px] font-mono font-semibold tabular-nums transition-colors duration-200 ${
+              currentUserVote === -1 ? 'text-red-400' : 'text-white/50'
+            }`}>{downvotes}</span>
           </button>
 
+          {/* Comments */}
           <button
             onClick={() => setShowComments(!showComments)}
-            className={`flex items-center gap-1 transition-colors duration-150 ${
-              showComments ? 'text-lime-accent' : 'text-white/25 hover:text-white/60'
+            className={`group flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-200 ${
+              showComments 
+                ? 'text-[#E8FF47] bg-[#E8FF47]/10' 
+                : 'text-white/30 hover:text-white/70 hover:bg-white/5'
             }`}
             title={`${showComments ? 'Hide' : 'Show'} comments`}
           >
-            <MessageCircle className={`w-5 h-5 sm:w-6 sm:h-6 ${showComments ? 'fill-current' : ''}`} />
-            <span className="text-[11px] font-mono tabular-nums">{comments.length}</span>
+            <MessageCircle className={`w-4 h-4 transition-all duration-200 group-hover:scale-110 ${showComments ? 'fill-current' : ''}`} strokeWidth={1.5} />
+            <span className="text-[11px] font-mono font-semibold tabular-nums">{comments.length}</span>
           </button>
 
           {/* Follow Button - Desktop Only */}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getUserVote, updateVote } from '@/lib/queries/votes'
+import { ArrowBigUp, ArrowBigDown, Bookmark } from 'lucide-react'
 import LoginPopup from '@/components/auth/LoginPopup'
 
 interface MobileVoteButtonsProps {
@@ -141,61 +142,69 @@ export default function MobileVoteButtons({ questionId, initialUpvotes }: Mobile
   }
 
   return (
-    <div className="flex items-center gap-2 lg:hidden">
+    <div className="flex items-center gap-1.5 lg:hidden">
       {/* Bookmark */}
       <button
         onClick={handleBookmark}
         disabled={isBookmarking}
-        className={`p-2 rounded-lg transition-all duration-150 ${
-          isBookmarked ? 'text-white/70 bg-white/10' : 'text-white/40 hover:text-white/60 hover:bg-white/5'
+        className={`group p-2 rounded-lg transition-all duration-200 ${
+          isBookmarked 
+            ? 'text-[#E8FF47] bg-[#E8FF47]/10' 
+            : 'text-white/40 hover:text-white/70 hover:bg-white/5'
         } ${isBookmarking ? 'opacity-40 cursor-wait' : ''}`}
         title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
       >
-        <span className="material-symbols-outlined text-[20px] leading-none">
-          {isBookmarked ? 'bookmark' : 'bookmark_border'}
-        </span>
+        <Bookmark 
+          className={`w-4 h-4 transition-all duration-200 group-hover:scale-110 ${isBookmarked ? 'fill-current' : ''}`}
+          strokeWidth={1.5}
+        />
       </button>
 
-      {/* Upvote */}
-      <button
-        onClick={() => handleVote(1)}
-        disabled={isVoting}
-        className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-150 ${
-          currentUserVote === 1 
-            ? 'text-[#E8FF47] bg-[#E8FF47]/10' 
-            : 'text-white/40 hover:text-white/60 hover:bg-white/5'
-        } ${isVoting ? 'opacity-40 cursor-wait' : ''}`}
-        title="Upvote"
-      >
-        <span className="material-symbols-outlined text-[20px] leading-none">
-          {currentUserVote === 1 ? 'arrow_upward' : 'arrow_upward_alt'}
-        </span>
-      </button>
+      {/* Vote Pill Container */}
+      <div className="flex items-center gap-0.5 bg-white/[0.03] border border-white/[0.08] rounded-full px-0.5 py-0.5">
+        {/* Upvote */}
+        <button
+          onClick={() => handleVote(1)}
+          disabled={isVoting}
+          className={`group flex items-center justify-center w-7 h-7 rounded-full transition-all duration-200 ${
+            currentUserVote === 1 
+              ? 'text-[#E8FF47] bg-[#E8FF47]/10' 
+              : 'text-white/40 hover:text-[#E8FF47]/70 hover:bg-white/5'
+          } ${isVoting ? 'opacity-40 cursor-wait' : ''}`}
+          title="Upvote"
+        >
+          <ArrowBigUp 
+            className="w-5 h-5 transition-all duration-200 group-hover:scale-110"
+            strokeWidth={1.5}
+          />
+        </button>
 
-      {/* Vote Count */}
-      <span className={`font-mono font-semibold text-sm leading-none tabular-nums select-none transition-colors duration-150 ${
-        currentUserVote === 1 ? 'text-[#E8FF47]' :
-        currentUserVote === -1 ? 'text-red-400' :
-        'text-white/60'
-      }`}>
-        {upvotes}
-      </span>
-
-      {/* Downvote */}
-      <button
-        onClick={() => handleVote(-1)}
-        disabled={isVoting}
-        className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-150 ${
-          currentUserVote === -1 
-            ? 'text-red-400 bg-red-400/10' 
-            : 'text-white/40 hover:text-white/60 hover:bg-white/5'
-        } ${isVoting ? 'opacity-40 cursor-wait' : ''}`}
-        title="Downvote"
-      >
-        <span className="material-symbols-outlined text-[20px] leading-none">
-          {currentUserVote === -1 ? 'arrow_downward' : 'arrow_downward_alt'}
+        {/* Vote Count */}
+        <span className={`font-mono font-semibold text-sm leading-none tabular-nums select-none px-1 transition-colors duration-200 ${
+          currentUserVote === 1 ? 'text-[#E8FF47]' :
+          currentUserVote === -1 ? 'text-red-400' :
+          'text-white/60'
+        }`}>
+          {upvotes}
         </span>
-      </button>
+
+        {/* Downvote */}
+        <button
+          onClick={() => handleVote(-1)}
+          disabled={isVoting}
+          className={`group flex items-center justify-center w-7 h-7 rounded-full transition-all duration-200 ${
+            currentUserVote === -1 
+              ? 'text-red-400 bg-red-400/10' 
+              : 'text-white/40 hover:text-red-400/70 hover:bg-white/5'
+          } ${isVoting ? 'opacity-40 cursor-wait' : ''}`}
+          title="Downvote"
+        >
+          <ArrowBigDown 
+            className="w-5 h-5 transition-all duration-200 group-hover:scale-110"
+            strokeWidth={1.5}
+          />
+        </button>
+      </div>
       
       {/* Login Popup */}
       <LoginPopup 
